@@ -67,3 +67,76 @@ def get_users(filters, page, usersPerPage):
     users = cursor.limit(usersPerPage)
 
     return (list(users), total_num_users)
+
+def add_user(user):
+    """
+    Adds a new user to the database.
+    
+    The user dictionary should contain the following keys:
+    - name: str
+    - age: str
+    - email: str
+    - password: str (hashed)
+    - created_at: datetime
+    - preferences: arrayOf(tastes)
+    
+    Returns the ObjectId of the inserted user document.
+    Raises an exception if a duplicate key or another error occurs.
+    """
+    try:
+        result = db.users.insert_one(user)
+        
+        return str(result.inserted_id)
+
+    except DuplicateKeyError as e:
+        # Handle duplicate key error (e.g., email or username already exists)
+        raise ValueError(f"User with the same username or email already exists: {e}")
+
+    except OperationFailure as e:
+        # Handle any other database operation failures
+        raise RuntimeError(f"Database operation failed: {e}")
+
+    except Exception as e:
+        # Handle other general exceptions
+        raise RuntimeError(f"An error occurred: {e}")
+
+def update_user(user_id, update_fields):
+    """
+    Updates an existing user in the database.
+    
+    Arguments:
+    - user_id: The ObjectId (as a string) or other unique identifier for the user to be updated.
+    - update_fields: A dictionary containing the fields to be updated.
+
+    Returns:
+    - The modified user document or raises an error if the update fails.
+    """
+    try:
+        if isinstance(user_id, str):
+            try:
+                user_id = ObjectId(user_id)
+            except InvalidId:
+                raise ValueError(f"Invalid user_id: {user_id}")
+
+        # Perform the update
+        result = db.users.find_one_and_update(
+            {"_id": user_id},           # Find the user by ObjectId
+            {"$set": update_fields},    # Update the specified fields
+            return_document=True 
+        )
+        
+        if result is None:
+            raise ValueError(f"User with id {user_id} not found.")
+        
+        return result
+
+    except InvalidId as e:
+        raise ValueError(f"Invalid ObjectId: {e}")
+
+    except OperationFailure as e:
+        raise RuntimeError(f"Database operation failed: {e}")
+
+    except Exception as e:
+        raise RuntimeError(f"An error occurred: {e}")
+
+
