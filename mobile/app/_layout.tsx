@@ -1,9 +1,11 @@
 import { Stack } from "expo-router";
+import "@fontsource/inter";
 
 export default function RootLayout() {
   return (
     <Stack>
-      <Stack.Screen name="index" />
+      {/* fisrt scren that opens */}
+      <Stack.Screen name="home" />
     </Stack>
   );
 }

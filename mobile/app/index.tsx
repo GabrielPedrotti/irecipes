@@ -1,15 +1,17 @@
+import React, { useRef } from "react";
 import { Text, View } from "react-native";
+import VideoPlayer from "@/components/VideoPlayer";
 
 export default function Index() {
   return (
     <View
       style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
+        backgroundColor: "#f5f5f5",
       }}
     >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
+      <Text>Index</Text>
+      {/* create a video background */}
+      <VideoPlayer source="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" />
     </View>
   );
 }
