@@ -1,11 +1,17 @@
-import { Stack } from "expo-router";
-import "@fontsource/inter";
+import { Stack } from "expo-router/stack";
 
-export default function RootLayout() {
+export default function Layout() {
   return (
     <Stack>
-      {/* fisrt scren that opens */}
-      <Stack.Screen name="home" />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="login"
+        options={{
+          headerShown: true,
+          title: "Login",
+          headerBackTitleVisible: false,
+        }}
+      />
     </Stack>
   );
 }
