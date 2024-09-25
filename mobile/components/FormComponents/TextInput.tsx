@@ -10,6 +10,7 @@ interface TextInputProps {
   style?: object;
   required?: boolean;
   error?: string;
+  onFocus?: () => void;
 }
 
 const TextInputComponent = forwardRef<TextInput, TextInputProps>(
@@ -22,6 +23,7 @@ const TextInputComponent = forwardRef<TextInput, TextInputProps>(
       style,
       required = false,
       error = "",
+      onFocus,
       ...props
     },
     ref,
@@ -29,7 +31,7 @@ const TextInputComponent = forwardRef<TextInput, TextInputProps>(
     const [isFocused, setIsFocused] = useState(false);
 
     return (
-      <View>
+      <View style={styles.main}>
         {title && (
           <Text style={styles.titleInput}>
             {title} {required && "*"}
@@ -40,7 +42,7 @@ const TextInputComponent = forwardRef<TextInput, TextInputProps>(
           {...props}
           ref={ref}
           placeholder={placeholder}
-          placeholderTextColor="black"
+          placeholderTextColor={"black"}
           value={value}
           onChangeText={onChangeText}
           style={[
@@ -50,7 +52,7 @@ const TextInputComponent = forwardRef<TextInput, TextInputProps>(
             // required && styles.required,
             error !== "" && styles.error,
           ]}
-          onFocus={() => setIsFocused(true)}
+          onFocus={onFocus}
           onBlur={() => setIsFocused(false)}
         />
         {error && <Text style={styles.errorText}>{error}</Text>}
@@ -66,12 +68,14 @@ const styles = StyleSheet.create({
   titleInput: {
     paddingBottom: 5,
   },
+  main: {
+    marginBottom: 10,
+  },
   input: {
     padding: 10,
     borderWidth: 1,
     borderColor: "gray",
     borderRadius: 10,
-    marginBottom: 10,
   },
   focused: {
     borderColor: Colors.red.brand,

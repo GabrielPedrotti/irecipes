@@ -34,7 +34,7 @@ const PasswordInput = forwardRef<TextInput, TextInputProps>(
     const [isFocused, setIsFocused] = useState(false);
 
     return (
-      <View>
+      <View style={styles.main}>
         {title && (
           <Text style={styles.titleInput}>
             {title} {required && "*"}
@@ -63,7 +63,7 @@ const PasswordInput = forwardRef<TextInput, TextInputProps>(
             name={!isPasswordVisible ? "eye-off" : "eye"}
             size={24}
             color="black"
-            style={{ position: "absolute", right: 10, top: 8 }}
+            style={{ position: "absolute", right: 10, top: 8, }}
             onPress={() => {
               setPasswordVisible(!isPasswordVisible);
             }}
@@ -82,12 +82,14 @@ const styles = StyleSheet.create({
   titleInput: {
     paddingBottom: 5,
   },
+  main: {
+    marginBottom: 10,
+  },
   input: {
     padding: 10,
     borderWidth: 1,
     borderColor: "gray",
     borderRadius: 10,
-    marginBottom: 10,
   },
   focused: {
     borderColor: Colors.red.brand,

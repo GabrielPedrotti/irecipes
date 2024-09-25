@@ -9,7 +9,7 @@ module.exports = {
   plugins: ["prettier", "@typescript-eslint"],
   rules: {
     "prettier/prettier": "warn",
-    "@typescript-eslint/ban-types": "warn",
+    "@typescript-eslint/ban-types": "off",
     "@typescript-eslint/ban-ts-comment": "warn",
   },
 };

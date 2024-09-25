@@ -12,10 +12,23 @@ interface ButtonProps {
   onClick: () => void;
   style?: object;
   isLoading?: boolean;
+  color?: "primary" | "secondary";
+  disabled?: boolean;
 }
 
 const ButtonComponent = forwardRef<TouchableOpacity, ButtonProps>(
-  ({ title, onClick, style, isLoading = false, ...props }, ref) => {
+  (
+    {
+      title,
+      onClick,
+      style,
+      isLoading = false,
+      color = "primary",
+      disabled,
+      ...props
+    },
+    ref,
+  ) => {
     const [isFocused, setIsFocused] = useState(false);
 
     return (
@@ -23,26 +36,37 @@ const ButtonComponent = forwardRef<TouchableOpacity, ButtonProps>(
         {...props}
         ref={ref}
         onPress={onClick}
-        style={[styles.button, style, isFocused && styles.focused]}
+        style={[
+          color === "primary" ? styles.button : styles.buttonSecondary,
+          style,
+          isFocused && styles.focused,
+        ]}
+        disabled={isLoading || disabled}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
       >
         {isLoading ? (
           <ActivityIndicator color="white" />
         ) : (
-          <Text style={{ color: "white" }}>{title}</Text>
+          <Text
+            style={
+              color === "primary" ? { color: "white" } : { color: "black" }
+            }
+          >
+            {title}
+          </Text>
         )}
       </TouchableOpacity>
     );
   },
 );
 
-ButtonComponent.displayName = "TextInputComponent";
+ButtonComponent.displayName = "ButtonComponent";
 export default ButtonComponent;
 
 const styles = StyleSheet.create({
   focused: {
-    borderColor: "blue",
+    borderColor: "white",
   },
   button: {
     alignItems: "center",
@@ -53,5 +77,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "white",
     backgroundColor: Colors.red.brand,
+  },
+  buttonSecondary: {
+    alignItems: "center",
+    padding: 10,
+    width: 250,
+    margin: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.red.brand,
+    backgroundColor: "white",
   },
 });

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useContext, useEffect } from "react";
 import {
   View,
   FlatList,
@@ -11,6 +11,7 @@ import VideoScreen from "@/components/VideoPlayer";
 import { useRouter } from "expo-router";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { AuthContext } from "@/context/AuthContext";
 
 const videos = [
   "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
@@ -24,8 +25,12 @@ export default function Index() {
   const { height } = Dimensions.get("window");
   const tabBarHeight = useBottomTabBarHeight();
   const router = useRouter();
-  const user = null;
+  const { user } = useContext(AuthContext);
   const isUserLoggedIn = !!user;
+
+  useEffect(() => {
+    console.log("User:", user);
+  }, [user]);
 
   const handleViewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems.length > 0) {

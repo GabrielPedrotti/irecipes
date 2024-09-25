@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import {
-  View,
-  Text,
   StyleSheet,
   SafeAreaView,
   Keyboard,
@@ -13,8 +13,20 @@ import {
 import TextInput from "../components/FormComponents/TextInput";
 import PasswordInput from "../components/FormComponents/PasswordInput";
 import Button from "../components/FormComponents/Button";
-import { FontAwesome } from "@expo/vector-icons";
 import logoTransparent from "../assets/images/logo-transparent.png";
+import { useRouter } from "expo-router";
+import { AuthContext } from "../context/AuthContext";
+import { api } from "../service/api";
+import ErrorModal from "../components/ErrorModal";
+
+const formSchema = yup.object().shape({
+  email: yup
+    .string()
+    .email("Formato de email inválido")
+    .required("Email é obrigatório"),
+  password: yup.string().required("Senha é obrigatória"),
+});
+
 type FormData = {
   email: string;
   password: string;
@@ -26,15 +38,37 @@ export default function Login() {
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm<FormData>();
-  const [submittedData, setSubmittedData] = useState(null as FormData | null);
+  } = useForm<FormData>({
+    resolver: yupResolver(formSchema),
+  });
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
   const [isPasswordVisible, setPasswordVisible] = useState(false);
+  const { setUserLogin } = useContext(AuthContext);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     Keyboard.dismiss();
-    // Simulate form submission
-    console.log("Submitted Data:", data);
-    setSubmittedData(data);
+    setIsLoading(true);
+
+    try {
+      const response = await api({
+        method: "POST",
+        url: "users/login",
+        data: data,
+      });
+
+      await setUserLogin(response.data.user);
+      setIsLoading(false);
+      router.replace("/");
+      return response;
+    } catch (error: any) {
+      setShowErrorModal(true);
+      setIsLoading(false);
+      console.error("Error:", error.response);
+      setError(error.response.data.error);
+    }
   };
 
   return (
@@ -46,12 +80,6 @@ export default function Login() {
       >
         <Image style={styles.logo} source={logoTransparent} />
 
-        {/* <FontAwesome
-          style={{ paddingBottom: 10 }}
-          name="user-circle"
-          size={100}
-          color="black"
-        /> */}
         <Controller
           control={control}
           render={({ field }) => (
@@ -60,12 +88,11 @@ export default function Login() {
               style={styles.input}
               placeholder="Email"
               required={true}
-              error={errors.email && errors.email.message}
+              error={errors.email?.message}
               onChangeText={(text) => setValue("email", text)}
             />
           )}
           name="email"
-          rules={{ required: "You must enter your email" }}
         />
 
         <Controller
@@ -74,28 +101,39 @@ export default function Login() {
             <PasswordInput
               {...field}
               style={styles.input}
-              placeholder="Password"
+              placeholder="Senha"
               isPasswordVisible={isPasswordVisible}
               setPasswordVisible={setPasswordVisible}
               required={true}
-              error={errors.password && errors.password.message}
+              error={errors.password?.message}
               onChangeText={(text) => setValue("password", text)}
             />
           )}
           name="password"
-          rules={{ required: "You must enter your password" }}
         />
 
-        <Button title="Entrar" onClick={handleSubmit(onSubmit)} />
-
-        {submittedData && (
-          <View>
-            <Text>Submitted Data:</Text>
-            <Text>Name: {submittedData.email}</Text>
-            <Text>Password: {submittedData.password}</Text>
-          </View>
-        )}
+        <Button
+          title="Entrar"
+          isLoading={isLoading}
+          onClick={handleSubmit(onSubmit)}
+        />
+        <Button
+          title="Cadastre-se"
+          color={"secondary"}
+          onClick={() => {
+            router.replace("/SignUp/signUp");
+          }}
+        />
       </TouchableOpacity>
+      {showErrorModal && (
+        <ErrorModal
+          isVisible={showErrorModal}
+          message={'Erro ao criar usuário: "' + error + '"'}
+          onClose={() => {
+            setShowErrorModal(false);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -117,7 +155,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderColor: "gray",
     borderWidth: 1,
-    marginBottom: 10,
     width: 250,
     padding: 8,
   },
