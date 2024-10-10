@@ -6,33 +6,93 @@ import {
   StyleSheet,
   TouchableOpacity,
   Text,
+  ActivityIndicator,
 } from "react-native";
+import { IVideo } from "@/types/Video";
 import VideoScreen from "@/components/VideoPlayer";
 import { useRouter } from "expo-router";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { AuthContext } from "@/context/AuthContext";
-
-const videos = [
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
-];
+import { getVideos } from "@/service/video";
+import { sendInteractionData } from "@/service/videoInteraction";
+import { useNavigation } from "@react-navigation/native";
 
 export default function Index() {
+  const [videos, setVideos] = useState<IVideo[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMoreVideos, setHasMoreVideos] = useState(true);
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 80 });
   const { height } = Dimensions.get("window");
   const tabBarHeight = useBottomTabBarHeight();
+  const navigation = useNavigation();
   const router = useRouter();
   const { user } = useContext(AuthContext);
   const isUserLoggedIn = !!user;
 
   useEffect(() => {
-    console.log("User:", user);
-  }, [user]);
+    if (user?._id) {
+      resetVideos();
+    }
+  }, [user?._id]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      console.log("Focused", user?._id);
+      if (user?._id) {
+        resetVideos();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, user?._id]);
+
+  // useEffect(() => {
+  //   if (user?._id) {
+  //     console.log("User:", user);
+  //     fetchVideos();
+  //   }
+  // }, [user?._id]);
+
+  const resetVideos = async () => {
+    setPage(1); // Reinicia a página
+    setVideos([]); // Limpa a lista de vídeos
+    setHasMoreVideos(true); // Habilita a busca novamente
+    fetchVideos(1); // Busca os vídeos a partir da página 1
+  };
+
+  const fetchVideos = async (pageNumber = page) => {
+    if (isLoading || !hasMoreVideos) return;
+    setIsLoading(true);
+
+    try {
+      const response = await getVideos(pageNumber, user?._id || "");
+      const newVideos = response;
+
+      if (newVideos.length === 0) {
+        setHasMoreVideos(false); // Se não há mais vídeos, desabilita a busca
+        return;
+      }
+
+      // Remove duplicatas com base no _id
+      const uniqueVideos = newVideos.filter(
+        (newVideo) =>
+          !videos.some((existingVideo) => existingVideo._id === newVideo._id),
+      );
+
+      setVideos((prevVideos) => [...prevVideos, ...uniqueVideos]);
+      setPage(pageNumber + 1); // Incrementa a página
+    } catch (error) {
+      console.error("Erro ao carregar vídeos", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleViewableItemsChanged = useRef(({ viewableItems }) => {
+    console.log("Viewable items:", viewableItems);
     if (viewableItems.length > 0) {
       const index = viewableItems[0].index;
       if (index !== null && index !== undefined) {
@@ -41,19 +101,38 @@ export default function Index() {
     }
   }).current;
 
+  const sendVideoInteractionData = async (
+    interactionType: string,
+    videoId: string,
+  ) => {
+    if (!isUserLoggedIn) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      await sendInteractionData(interactionType, user?._id, videoId, 0, false);
+    } catch (error) {
+      console.error("Erro ao registrar a interação", error);
+    }
+  };
+
   return (
     <FlatList
-      data={videos}
-      renderItem={({ item, index }) => (
+      data={videos || null}
+      renderItem={({ item, index }: any) => (
         <View style={{ height: height - tabBarHeight }}>
-          <VideoScreen source={item} isPlaying={currentIndex === index} />
+          <VideoScreen
+            source={item.url}
+            isPlaying={currentIndex === index}
+            videoId={item.id}
+            userId={item?.user_id || null}
+          />
           <View style={styles.actionsContainer}>
             <TouchableOpacity
               onPress={() => {
                 console.log("like");
-                if (!isUserLoggedIn) {
-                  router.push("/login");
-                }
+                sendVideoInteractionData("like", item._id);
               }}
               style={styles.buttons}
             >
@@ -68,9 +147,7 @@ export default function Index() {
             <TouchableOpacity
               onPress={() => {
                 console.log("comments");
-                if (!isUserLoggedIn) {
-                  router.push("/login");
-                }
+                sendVideoInteractionData("comment", item._id);
               }}
               style={styles.buttons}
             >
@@ -85,9 +162,7 @@ export default function Index() {
             <TouchableOpacity
               onPress={() => {
                 console.log("Shares");
-                if (!isUserLoggedIn) {
-                  router.push("/login");
-                }
+                sendVideoInteractionData("share", item._id);
               }}
               style={styles.buttons}
             >
@@ -102,11 +177,16 @@ export default function Index() {
           </View>
         </View>
       )}
-      keyExtractor={(item, index) => index.toString()}
+      keyExtractor={(item, index) => item?._id.toString()}
       pagingEnabled
       showsVerticalScrollIndicator={false}
       onViewableItemsChanged={handleViewableItemsChanged}
       viewabilityConfig={viewabilityConfig.current}
+      onEndReached={() => fetchVideos(page)} // Chama a função quando atinge o final da lista
+      onEndReachedThreshold={0.5} // Quando carregar mais (50% antes de atingir o final)
+      ListFooterComponent={
+        isLoading ? <ActivityIndicator size="large" color="#0000ff" /> : null
+      }
     />
   );
 }

@@ -9,6 +9,8 @@ import json
 
 # Import the users Blueprint correctly
 from services.users import users
+from services.videos import videos
+from services.videoInteractions import videoInteractions
 
     
 class JSONEncoder(json.JSONEncoder):
@@ -37,7 +39,9 @@ def create_app():
                 template_folder=TEMPLATE_FOLDER)
     CORS(app)
     app.json_encoder = MongoJsonEncoder
-    app.register_blueprint(users)  # Register the users blueprint
+    app.register_blueprint(users)
+    app.register_blueprint(videos)
+    app.register_blueprint(videoInteractions)
 
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')

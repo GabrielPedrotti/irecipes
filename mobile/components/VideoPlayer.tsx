@@ -9,13 +9,21 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { sendInteractionData } from "@/service/videoInteraction";
 
 interface VideoProps {
   source: string;
   isPlaying: boolean;
+  videoId: string; // ID do vídeo
+  userId: string | null; // ID do usuário
 }
 
-export default function VideoScreen({ source, isPlaying }: VideoProps) {
+export default function VideoScreen({
+  source,
+  isPlaying,
+  videoId,
+  userId,
+}: VideoProps) {
   const ref = useRef(null);
   const [showControls, setShowControls] = useState(false);
   const [videoDuration, setVideoDuration] = useState(0);
@@ -36,8 +44,8 @@ export default function VideoScreen({ source, isPlaying }: VideoProps) {
     }
   }, [isPlaying]);
 
-  // create useEffect to when not focused pause the video
   useEffect(() => {
+    console.log("navigation:", navigation);
     const unsubscribe = navigation.addListener("blur", () => {
       player.pause();
     });
@@ -45,7 +53,12 @@ export default function VideoScreen({ source, isPlaying }: VideoProps) {
     return unsubscribe;
   }, [navigation]);
 
+  player.addListener("blur", () => {
+    console.log("here");
+  });
+
   useEffect(() => {
+    console.log("player:", player);
     const subscription = player.addListener("playingChange", (isPlaying) => {
       setIsVideoPlaying(isPlaying);
     });
@@ -77,6 +90,44 @@ export default function VideoScreen({ source, isPlaying }: VideoProps) {
       };
     }
   }, [isPlaying, showControls]);
+
+  // Função para registrar a interação com o vídeo (curtir, comentar, compartilhar)
+  // const sendInteractionData = async (interactionType: string) => {
+  //   // if (!userId) {
+  //   //   navigation.navigate("/login");
+  //   //   return;
+  //   // }
+
+  //   try {
+  //     await axios.post("/api/videoInteraction", {
+  //       userId: userId,
+  //       videoId: videoId,
+  //       watchedTime: currentTime, // O tempo atual de reprodução do vídeo
+  //       liked: interactionType === "like",
+  //       commented: interactionType === "comment",
+  //       shared: interactionType === "share",
+  //       watchedComplete: currentTime >= videoDuration, // Se o vídeo foi assistido até o final
+  //     });
+  //   } catch (error) {
+  //     console.error("Erro ao registrar a interação", error);
+  //   }
+  // };
+
+  const sendVideoInteractionData = async (
+    interactionType: string,
+    videoId: string,
+  ) => {
+    // if (!userId) {
+    //   router.push("/login");
+    //   return;
+    // }
+
+    try {
+      await sendInteractionData(interactionType, userId, videoId, 0, false);
+    } catch (error) {
+      console.error("Erro ao registrar a interação", error);
+    }
+  };
 
   return (
     <TouchableWithoutFeedback onPress={() => setShowControls(!showControls)}>
@@ -113,14 +164,6 @@ export default function VideoScreen({ source, isPlaying }: VideoProps) {
                 style={styles.icon}
               />
             </TouchableOpacity>
-            {/* <Slider
-              style={styles.slider}
-              minimumValue={0}
-              maximumValue={videoDuration}
-              value={currentTime}
-              minimumTrackTintColor="#FFFFFF"
-              maximumTrackTintColor="#000000"
-            /> */}
           </View>
         )}
       </View>
@@ -150,16 +193,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
   },
-  slider: {
-    width: "90%",
-    height: 40,
-    marginTop: 10,
-  },
   icon: {
-    shadowColor: "#000", // Shadow color
-    shadowOffset: { width: 0, height: 2 }, // Shadow offset
-    shadowOpacity: 0.8, // Shadow opacity
-    shadowRadius: 4, // Shadow radius
-    elevation: 5, // Android shadow
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });

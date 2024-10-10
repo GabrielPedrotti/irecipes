@@ -10,6 +10,7 @@ interface TextInputProps {
   style?: object;
   required?: boolean;
   error?: string;
+  multiline?: boolean;
   onFocus?: () => void;
 }
 
@@ -23,6 +24,7 @@ const TextInputComponent = forwardRef<TextInput, TextInputProps>(
       style,
       required = false,
       error = "",
+      multiline = false,
       onFocus,
       ...props
     },
@@ -44,6 +46,7 @@ const TextInputComponent = forwardRef<TextInput, TextInputProps>(
           placeholder={placeholder}
           placeholderTextColor={"black"}
           value={value}
+          multiline={multiline}
           onChangeText={onChangeText}
           style={[
             styles.input,

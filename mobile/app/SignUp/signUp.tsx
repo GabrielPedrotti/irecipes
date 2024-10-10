@@ -260,25 +260,6 @@ export default function SignUp() {
               Já possui uma conta? Faça login
             </Text>
           </TouchableOpacity>
-
-          {submittedData && (
-            <View>
-              <Text>Submitted Data:</Text>
-              <Text>Username: {submittedData.userName}</Text>
-              <Text>Name: {submittedData.name}</Text>
-              <Text>Email: {submittedData.email}</Text>
-              <Text>
-                Birth Date: {new Date(submittedData.birthDate).toDateString()}
-              </Text>
-              <Text>
-                Terms of Use: {submittedData.useTerms ? "Accepted" : "Declined"}
-              </Text>
-              <Text>Password: {submittedData.password}</Text>
-              <Text>
-                Password Confirmation: {submittedData.passwordConfirmation}
-              </Text>
-            </View>
-          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

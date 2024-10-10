@@ -1,12 +1,13 @@
+import React, { useContext } from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs, useRouter } from "expo-router";
-import { useEffect } from "react";
 import { Colors } from "../../constants/Colors";
+import { AuthContext } from "@/context/AuthContext";
 
 export default function RootLayout() {
   const router = useRouter();
-  const isUserLogged = false;
-  const user = null;
+  const { user } = useContext(AuthContext);
+  const isUserLogged = !!user;
 
   return (
     <Tabs
