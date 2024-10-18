@@ -17,9 +17,12 @@ import { AuthContext } from "@/context/AuthContext";
 import { getVideos } from "@/service/video";
 import { sendInteractionData } from "@/service/videoInteraction";
 import { useNavigation } from "@react-navigation/native";
+import CommentsModal from "@/components/VideoComponents/CommentsModal";
 
 export default function Index() {
   const [videos, setVideos] = useState<IVideo[]>([]);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [videoSelected, setVideoSelected] = useState<IVideo | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -118,76 +121,94 @@ export default function Index() {
   };
 
   return (
-    <FlatList
-      data={videos || null}
-      renderItem={({ item, index }: any) => (
-        <View style={{ height: height - tabBarHeight }}>
-          <VideoScreen
-            source={item.url}
-            isPlaying={currentIndex === index}
-            videoId={item.id}
-            userId={item?.user_id || null}
-          />
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity
-              onPress={() => {
-                console.log("like");
-                sendVideoInteractionData("like", item._id);
-              }}
-              style={styles.buttons}
-            >
-              <Ionicons
-                name={"heart-outline"}
-                size={38}
-                color="white"
-                style={styles.icon}
-              />
-              <Text style={{ color: "white" }}>Likes</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                console.log("comments");
-                sendVideoInteractionData("comment", item._id);
-              }}
-              style={styles.buttons}
-            >
-              <Ionicons
-                name={"chatbubble-ellipses-outline"}
-                size={38}
-                color="white"
-                style={styles.icon}
-              />
-              <Text style={{ color: "white" }}>Comments</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                console.log("Shares");
-                sendVideoInteractionData("share", item._id);
-              }}
-              style={styles.buttons}
-            >
-              <Ionicons
-                name={"share-outline"}
-                size={38}
-                color="white"
-                style={styles.icon}
-              />
-              <Text style={{ color: "white" }}>Share</Text>
-            </TouchableOpacity>
+    <>
+      <FlatList
+        data={videos || null}
+        renderItem={({ item, index }: any) => (
+          <View style={{ height: height - tabBarHeight }}>
+            <VideoScreen
+              source={item.url}
+              isPlaying={currentIndex === index}
+              videoId={item.id}
+              userId={item?.user_id || null}
+            />
+            <View style={styles.actionsContainer}>
+              <TouchableOpacity
+                onPress={() => {
+                  console.log("like");
+                  sendVideoInteractionData("like", item._id);
+                }}
+                style={styles.buttons}
+              >
+                <Ionicons
+                  name={"heart-outline"}
+                  size={38}
+                  color="white"
+                  style={styles.icon}
+                />
+                <Text style={{ color: "white" }}>Likes</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  console.log("comments");
+                  setVideoSelected(item);
+                  setShowCommentsModal(!showCommentsModal);
+                  sendVideoInteractionData("comment", item._id);
+                }}
+                style={styles.buttons}
+              >
+                <Ionicons
+                  name={"chatbubble-ellipses-outline"}
+                  size={38}
+                  color="white"
+                  style={styles.icon}
+                />
+                <Text style={{ color: "white" }}>Comments</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  console.log("Shares");
+                  sendVideoInteractionData("share", item._id);
+                }}
+                style={styles.buttons}
+              >
+                <Ionicons
+                  name={"share-outline"}
+                  size={38}
+                  color="white"
+                  style={styles.icon}
+                />
+                <Text style={{ color: "white" }}>Share</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        )}
+        keyExtractor={(item, index) => item?._id.toString()}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        onViewableItemsChanged={handleViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig.current}
+        onEndReached={() => fetchVideos(page)} // Chama a função quando atinge o final da lista
+        onEndReachedThreshold={0.5} // Quando carregar mais (50% antes de atingir o final)
+        ListFooterComponent={
+          isLoading ? (
+            <ActivityIndicator
+              style={{ marginTop: 100 }}
+              size="large"
+              color="#0000ff"
+            />
+          ) : null
+        }
+      />
+      {videoSelected && user?._id && showCommentsModal && (
+        <CommentsModal
+          isVisible={showCommentsModal}
+          onClose={() => setShowCommentsModal(!showCommentsModal)}
+          userId={user?._id}
+          video={videoSelected}
+        />
       )}
-      keyExtractor={(item, index) => item?._id.toString()}
-      pagingEnabled
-      showsVerticalScrollIndicator={false}
-      onViewableItemsChanged={handleViewableItemsChanged}
-      viewabilityConfig={viewabilityConfig.current}
-      onEndReached={() => fetchVideos(page)} // Chama a função quando atinge o final da lista
-      onEndReachedThreshold={0.5} // Quando carregar mais (50% antes de atingir o final)
-      ListFooterComponent={
-        isLoading ? <ActivityIndicator size="large" color="#0000ff" /> : null
-      }
-    />
+    </>
   );
 }
 

@@ -41,6 +41,61 @@ export const getVideos = async (page: number, userId: string) => {
   }
 };
 
+export const getVideoById = async (videoId: string) => {
+  try {
+    const response = await api({
+      method: "GET",
+      url: `videos/getVideo?videoId=${videoId}`,
+    });
+
+    console.log("Response video:", response.data);
+
+    return response.data as IVideo;
+  } catch (error) {
+    console.error("Erro ao buscar o vídeo", error);
+    throw error;
+  }
+};
+
+export const getVideoComments = async (videoId: string) => {
+  try {
+    const response = await api({
+      method: "GET",
+      url: `videos/getComments/${videoId}`,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.log("Erro ao buscar os comentários", error);
+    return [];
+  }
+};
+
+export const postComment = async (
+  videoId: string,
+  userId: string,
+  comment: string,
+) => {
+  try {
+    console.log("Post comment:", videoId, userId, comment);
+    const response = await api({
+      method: "POST",
+      url: "videos/postComment",
+      data: {
+        videoId,
+        userId,
+        comment,
+      },
+    });
+
+    console.log("Response comment:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao postar o comentário", error);
+    throw error;
+  }
+};
+
 export const uploadVideoToBackend = async ({
   videoUri,
   title,

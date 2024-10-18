@@ -3,7 +3,7 @@ from db import get_videos, add_video, update_video, get_video, get_user_videos, 
 from datetime import datetime
 from flask_cors import CORS
 from google.cloud import storage
-import os
+from bson import ObjectId
 
 videos = Blueprint('videos', 'videos', url_prefix='/api/v1/videos')
 CORS(videos)
@@ -52,7 +52,7 @@ def postVideo():
         user = data.get('userId')
         created_at = datetime.now()
         comments = []
-        likes = 0
+        likes = []
 
         video = {
             "title": title,
@@ -94,13 +94,11 @@ def postLike():
     try:
         data = request.get_json()
         video_id = data.get('videoId')
-        # user_id = data.get('userId')
-
-        # needs to sum 1 to the likes field
+        user_id = data.get('userId')
 
         db.videos.find_one_and_update(
             {"_id": video_id},
-            {"$inc": {"likes": 1}}
+            {"$push": {"likes": user_id}}
         )
         
         return jsonify({"message": "Like posted successfully"}), 200
@@ -112,15 +110,13 @@ def deleteLike():
     try:
         data = request.get_json()
         video_id = data.get('videoId')
-        # user_id = data.get('userId')
-
-        # needs to subtract 1 to the likes field
+        user_id = data.get('userId')
 
         db.videos.find_one_and_update(
             {"_id": video_id},
-            {"$inc": {"likes": -1}}
+            {"$pull": {"likes": user_id}}
         )
-        
+
         return jsonify({"message": "Like deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -134,14 +130,33 @@ def postComment():
         comment = data.get('comment')
         timestamp = datetime.now()
 
+        user = db.users.find_one({"_id": ObjectId(user_id)})
+
+        print('user', user)
+
         db.videos.find_one_and_update(
-            {"_id": video_id},
-            {"$push": {"comments": {"userId": user_id, "comment": comment, "timestamp": timestamp}}}
+            {"_id": ObjectId(video_id)},
+            {"$push": {"comments": {"userId": user_id, "userName": user["userName"], "comment": comment, "timestamp": timestamp}}}
         )
+
+        print(db.videos.find_one({"_id": ObjectId(video_id)}))
 
         return jsonify({"message": "Comment posted successfully"}), 200
     except Exception as e:
+        print('e', e) 
         return jsonify({"error": str(e)}), 500
+    
+@videos.route('/getComments/<videoId>', methods=['GET'])
+def getComments(videoId):
+    try:
+        video = get_video(videoId)
+        print('video', video)
+        comments = video.get('comments')
+        print('comments', comments)
+        return jsonify({"comments": comments}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @videos.route('/updateViews', methods=['POST'])
 def updateViews():

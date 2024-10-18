@@ -71,7 +71,9 @@ def postUser():
             "created_at": created_at,
             "tastes": tastes,
             "birthDate": birthDate,
-            "useTerms": useTerms
+            "useTerms": useTerms,
+            "followers": [],
+            "following": []
         }
 
         user_id = add_user(user)
@@ -150,3 +152,46 @@ def login_user():
 
     except Exception as e:
         return jsonify({"error": f"An error occurred: {e}"}), 500
+    
+@users.route('/follow', methods=['POST'])
+def follow():
+    data = request.get_json()
+    user_id = data.get('userId')
+    follow_id = data.get('followId')
+
+    try:
+        db.users.find_one_and_update(
+            {"_id": ObjectId(user_id)},
+            {"$push": {"following": follow_id}}
+        )
+
+        db.users.find_one_and_update(
+            {"_id": ObjectId(follow_id)},
+            {"$push": {"followers": user_id}}
+        )
+
+        return jsonify({"message": "User followed successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@users.route('/unfollow', methods=['POST'])
+def unfollow():
+    data = request.get_json()
+    user_id = data.get('userId')
+    follow_id = data.get('followId')
+
+    try:
+        db.users.find_one_and_update(
+            {"_id": ObjectId(user_id)},
+            {"$pull": {"following": follow_id}}
+        )
+
+        db.users.find_one_and_update(
+            {"_id": ObjectId(follow_id)},
+            {"$pull": {"followers": user_id}}
+        )
+
+        return jsonify({"message": "User unfollowed successfully"}), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

@@ -3,6 +3,7 @@ from db import get_videos, get_db
 from datetime import datetime
 from flask_cors import CORS
 from bson import ObjectId
+from pymongo import MongoClient, errors
 
 videoInteractions = Blueprint('videoInteractions', 'videoInteractions', url_prefix='/api/v1/interactions')
 CORS(videoInteractions)
@@ -63,24 +64,31 @@ def updateVideoInteraction():
 @videoInteractions.route('/recommended', methods=['GET'])
 def recommended_videos():
     user_id = request.args.get('userId')
+    posted_video_id = request.args.get('postedVideoId')  # Recebe o ID do vídeo postado
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 20))
 
+    # Busca o vídeo recém-postado se o ID for fornecido
+    posted_video = None
+    if posted_video_id:
+        posted_video = get_db().videos.find_one({"_id": ObjectId(posted_video_id)})
+    
+    # Verifica se o usuário existe
     if not user_id:
         videos, total_num_videos = get_videos({}, page, limit)
-        return jsonify({"videos": videos, "total_num_videos": total_num_videos}), 200
+        videos_list = [posted_video] + videos if posted_video else videos
+        return jsonify({"videos": videos_list, "total_num_videos": total_num_videos}), 200
 
     user = get_db().users.find_one({"_id": ObjectId(user_id)})
-
     if not user:
         return jsonify({"error": "User not found"}), 404
 
+    # Processa recomendações baseado nos gostos e interações
     tastes = user.get('tastes', [])
-
     user_interactions = list(get_db().videoInteractions.find({"userId": user_id}))
     interacted_videos = [interaction['videoId'] for interaction in user_interactions]
-    print('interacted_videos', interacted_videos)
 
+    # Caso não tenha interações, inicializa com uma lista vazia
     if not user_interactions:
         interacted_videos = []
 
@@ -93,12 +101,14 @@ def recommended_videos():
     }
 
     taste_weights = {taste: 0 for taste in tastes}
-    # usa as interações para calcular o peso de cada gosto
-    if user_interactions:
-        for interaction in user_interactions:
-            video = get_db().videos.find_one({"_id": ObjectId(interaction['videoId'])})
-            video_tastes = video.get('tags', [])
 
+    # Calcula o peso dos gostos baseados nas interações
+    if user_interactions:
+        video_ids = [ObjectId(interaction['videoId']) for interaction in user_interactions]
+        videos = list(get_db().videos.find({"_id": {"$in": video_ids}}))
+
+        for interaction, video in zip(user_interactions, videos):
+            video_tastes = video.get('tags', [])
             relevance_score = (
                 interaction.get('watchedComplete', 0) * weights['watchedComplete'] +
                 interaction.get('liked', 0) * weights['liked'] +
@@ -106,26 +116,23 @@ def recommended_videos():
                 interaction.get('shared', 0) * weights['shared'] +
                 interaction.get('watchedTime', 0) * weights['watchedTime']
             )
-
-            print('relevance_score', relevance_score)
-
             for taste in video_tastes:
                 if taste in taste_weights:
                     taste_weights[taste] += relevance_score
                 else:
                     taste_weights[taste] = relevance_score
 
-    # ordena os gostos por peso
+    # Ordena os gostos por peso
     sorted_tastes = sorted(taste_weights.items(), key=lambda x: x[1], reverse=True)
-    sorted_tastes = [taste for taste, _ in sorted_tastes]  
-    print('sorted_tastes', sorted_tastes)
+    sorted_tastes = [taste for taste, _ in sorted_tastes]
 
     if not sorted_tastes:
         sorted_tastes = tastes
 
     skip = (page - 1) * limit
+
     try:
-        # busca vídeos que tenham pelo menos um dos gostos do usuário e que ele ainda não interagiu.
+        # Busca vídeos recomendados baseados nos gostos e que o usuário ainda não interagiu
         recommended_videos_cursor = get_db().videos.aggregate([
             {
                 "$match": {
@@ -145,8 +152,12 @@ def recommended_videos():
 
         recommended_videos = list(recommended_videos_cursor)
 
+        # Se houver um vídeo postado, coloca ele no início da lista de vídeos recomendados
+        if posted_video:
+            recommended_videos.insert(0, posted_video)
+
         return jsonify(recommended_videos), 200
-    except Exception as e:
+    except pymongo.errors.PyMongoError as e:
         return jsonify({"error": str(e)}), 500
 
 

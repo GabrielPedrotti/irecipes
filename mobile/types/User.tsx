@@ -7,4 +7,6 @@ export interface User {
   birthDate: Date;
   useTerms: boolean;
   tastes: string[];
+  followers: string[];
+  following: string[];
 }

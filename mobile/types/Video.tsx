@@ -7,7 +7,7 @@ export interface IVideo {
   duration: number;
   createdAt: Date;
   comments: string[];
-  likes: number;
+  likes: string[];
   user_id: string;
 }
 

@@ -47,5 +47,11 @@ def create_app():
     @app.route('/<path:path>')
     def serve(path):
         return render_template('index.html')
+    
+     # Print all registered routes
+    with app.app_context():
+        for rule in app.url_map.iter_rules():
+            methods = ','.join(rule.methods)
+            print(f"{rule.endpoint}: {rule} [{methods}]")
 
     return app
