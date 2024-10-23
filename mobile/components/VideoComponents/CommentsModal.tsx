@@ -41,7 +41,7 @@ export default function CommentsModal({
   const [isPosting, setIsPosting] = useState(false);
   const panY = useRef(new Animated.Value(0)).current;
   const translateY = useRef(
-    new Animated.Value(Dimensions.get("window").height)
+    new Animated.Value(Dimensions.get("window").height),
   ).current;
 
   const screenHeight = Dimensions.get("window").height;
@@ -131,7 +131,8 @@ export default function CommentsModal({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: (_, gestureState) => {
       return (
-        gestureState.dy > 5 && Math.abs(gestureState.dx) < Math.abs(gestureState.dy)
+        gestureState.dy > 5 &&
+        Math.abs(gestureState.dx) < Math.abs(gestureState.dy)
       );
     },
     onPanResponderMove: Animated.event([null, { dy: panY }], {
@@ -139,7 +140,6 @@ export default function CommentsModal({
     }),
     onPanResponderRelease: (_, gestureState) => {
       if (gestureState.dy > 100) {
-
         translateY.setValue(translateY._value + gestureState.dy);
         panY.setValue(0);
 
@@ -198,7 +198,9 @@ export default function CommentsModal({
               <FlatList
                 data={videoComments}
                 renderItem={renderCommentItem}
-                keyExtractor={(item) => item._id}
+                keyExtractor={(item) =>
+                  (item?.userName.toString() + Math.random()).toString()
+                }
                 contentContainerStyle={styles.commentsContainer}
                 style={{ flex: 1 }}
               />

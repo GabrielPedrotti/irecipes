@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import React, { useRef, useState, useContext, useEffect } from "react";
 import {
   View,
@@ -16,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { AuthContext } from "@/context/AuthContext";
 import { getVideos } from "@/service/video";
 import { sendInteractionData } from "@/service/videoInteraction";
+import { postLike, deleteLike, getLikes } from "@/service/video";
 import { useNavigation } from "@react-navigation/native";
 import CommentsModal from "@/components/VideoComponents/CommentsModal";
 
@@ -120,69 +122,101 @@ export default function Index() {
     }
   };
 
+  const likeVideo = async (videoData: IVideo) => {
+    const liked = videoData.likes?.some((like: string) => like === user?._id);;
+
+    try {
+      if (liked && user?._id) {
+        await deleteLike(user?._id, videoData._id);
+      }
+      if (!liked && user?._id) {
+        await postLike(user?._id, videoData._id);
+      }
+
+      const likes = await getLikes(videoData._id);
+      const updatedVideos = videos.map((video) => {
+        if (video._id === videoData._id) {
+          const updatedLikes = Array.isArray(likes.likes) ? likes.likes : likes;
+          return { ...video, likes: updatedLikes };
+        }
+        return video;
+      });
+
+      setVideos(updatedVideos);
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
   return (
     <>
       <FlatList
         data={videos || null}
-        renderItem={({ item, index }: any) => (
-          <View style={{ height: height - tabBarHeight }}>
-            <VideoScreen
-              source={item.url}
-              isPlaying={currentIndex === index}
-              videoId={item.id}
-              userId={item?.user_id || null}
-            />
-            <View style={styles.actionsContainer}>
-              <TouchableOpacity
-                onPress={() => {
-                  console.log("like");
-                  sendVideoInteractionData("like", item._id);
-                }}
-                style={styles.buttons}
-              >
-                <Ionicons
-                  name={"heart-outline"}
-                  size={38}
-                  color="white"
-                  style={styles.icon}
-                />
-                <Text style={{ color: "white" }}>Likes</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  console.log("comments");
-                  setVideoSelected(item);
-                  setShowCommentsModal(!showCommentsModal);
-                  sendVideoInteractionData("comment", item._id);
-                }}
-                style={styles.buttons}
-              >
-                <Ionicons
-                  name={"chatbubble-ellipses-outline"}
-                  size={38}
-                  color="white"
-                  style={styles.icon}
-                />
-                <Text style={{ color: "white" }}>Comments</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  console.log("Shares");
-                  sendVideoInteractionData("share", item._id);
-                }}
-                style={styles.buttons}
-              >
-                <Ionicons
-                  name={"share-outline"}
-                  size={38}
-                  color="white"
-                  style={styles.icon}
-                />
-                <Text style={{ color: "white" }}>Share</Text>
-              </TouchableOpacity>
+        renderItem={({ item, index }: any) => {
+          let liked = item.likes?.some((like: string) => like === user?._id);
+
+          return (
+            <View style={{ height: height - tabBarHeight }}>
+              <VideoScreen
+                source={item.url}
+                isPlaying={currentIndex === index}
+                videoId={item.id}
+                userId={item?.user_id || null}
+              />
+              <View style={styles.actionsContainer}>
+                <TouchableOpacity
+                  onPress={() => {
+                    console.log("like");
+                    liked = !liked;
+                    likeVideo(item);
+                    sendVideoInteractionData("like", item._id);
+                  }}
+                  style={styles.buttons}
+                >
+                  <Ionicons
+                    name={"heart-outline"}
+                    size={38}
+                    color={!liked ? "white" : "red"}
+                    style={styles.icon}
+                  />
+                  <Text style={{ color: "white" }}>{item.likes.length}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    console.log("comments");
+                    setVideoSelected(item);
+                    setShowCommentsModal(!showCommentsModal);
+                    sendVideoInteractionData("comment", item._id);
+                  }}
+                  style={styles.buttons}
+                >
+                  <Ionicons
+                    name={"chatbubble-ellipses-outline"}
+                    size={38}
+                    color="white"
+                    style={styles.icon}
+                  />
+                  <Text style={{ color: "white" }}>Comments</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    console.log("Shares");
+                    sendVideoInteractionData("share", item._id);
+                  }}
+                  style={styles.buttons}
+                >
+                  <Ionicons
+                    name={"share-outline"}
+                    size={38}
+                    color="white"
+                    style={styles.icon}
+                  />
+                  <Text style={{ color: "white" }}>Share</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        )}
+          );
+        }}
         keyExtractor={(item, index) => item?._id.toString()}
         pagingEnabled
         showsVerticalScrollIndicator={false}

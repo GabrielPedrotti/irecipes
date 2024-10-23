@@ -97,27 +97,34 @@ def postLike():
         user_id = data.get('userId')
 
         db.videos.find_one_and_update(
-            {"_id": video_id},
+            {"_id": ObjectId(video_id)},
             {"$push": {"likes": user_id}}
         )
+        print('video_id', video_id)
         
+        print(db.videos.find_one({"_id": ObjectId(video_id)}))
         return jsonify({"message": "Like posted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@videos.route('/deleteLike', methods=['DELETE'])
-def deleteLike():
+@videos.route('/deleteLike/<userId>/<videoId>', methods=['DELETE'])
+def deleteLike(userId, videoId):
     try:
-        data = request.get_json()
-        video_id = data.get('videoId')
-        user_id = data.get('userId')
-
         db.videos.find_one_and_update(
-            {"_id": video_id},
-            {"$pull": {"likes": user_id}}
+            {"_id": ObjectId(videoId)},
+            {"$pull": {"likes": userId}}
         )
 
         return jsonify({"message": "Like deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@videos.route('/getLikes/<videoId>', methods=['GET'])
+def getLikes(videoId):
+    try:
+        video = get_video(videoId)
+        likes = video.get('likes')
+        return jsonify({"likes": likes}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     

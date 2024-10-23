@@ -71,6 +71,52 @@ export const getVideoComments = async (videoId: string) => {
   }
 };
 
+export const getLikes = async (videoId: string) => {
+  try {
+    const response = await api({
+      method: "GET",
+      url: `videos/getLikes/${videoId}`,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.log("Erro ao buscar os likes", error);
+    return [];
+  }
+};
+
+export const postLike = async (userId: string, videoId: string) => {
+  try {
+    const response = await api({
+      method: "POST",
+      url: "videos/postLike",
+      data: {
+        userId,
+        videoId,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao postar o like", error);
+    throw error;
+  }
+};
+
+export const deleteLike = async (userId: string, videoId: string) => {
+  try {
+    const response = await api({
+      method: "DELETE",
+      url: `videos/deleteLike/${userId}/${videoId}`,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao deletar o like", error);
+    throw error;
+  }
+};
+
 export const postComment = async (
   videoId: string,
   userId: string,
