@@ -43,7 +43,6 @@ export default function SignUpConfirmation() {
   } as confirmationData;
 
   const onSubmit = async (data: confirmationData) => {
-    console.log("Submitted Data:", data);
     try {
       const response = await api({
         method: "POST",

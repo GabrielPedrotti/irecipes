@@ -30,6 +30,14 @@ export default function Layout() {
             headerBackTitleVisible: false,
           }}
         />
+        <Stack.Screen
+          name="video/[videoId]"
+          options={{
+            headerShown: false,
+            title: "Vídeo",
+            headerBackTitleVisible: false,
+          }}
+        />
       </Stack>
     </AuthProvider>
   );

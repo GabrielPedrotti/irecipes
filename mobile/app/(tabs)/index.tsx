@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Text,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { IVideo } from "@/types/Video";
 import VideoScreen from "@/components/VideoPlayer";
@@ -34,18 +35,18 @@ export default function Index() {
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation();
   const router = useRouter();
-  const { user } = useContext(AuthContext);
+  const { user, setUserLogin } = useContext(AuthContext);
   const isUserLoggedIn = !!user;
 
   useEffect(() => {
     if (user?._id) {
+      setUserLogin(user);
       resetVideos();
     }
   }, [user?._id]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
-      console.log("Focused", user?._id);
       if (user?._id) {
         resetVideos();
       }
@@ -54,18 +55,11 @@ export default function Index() {
     return unsubscribe;
   }, [navigation, user?._id]);
 
-  // useEffect(() => {
-  //   if (user?._id) {
-  //     console.log("User:", user);
-  //     fetchVideos();
-  //   }
-  // }, [user?._id]);
-
   const resetVideos = async () => {
-    setPage(1); // Reinicia a página
-    setVideos([]); // Limpa a lista de vídeos
-    setHasMoreVideos(true); // Habilita a busca novamente
-    fetchVideos(1); // Busca os vídeos a partir da página 1
+    setPage(1);
+    setVideos([]);
+    setHasMoreVideos(true);
+    fetchVideos(1);
   };
 
   const fetchVideos = async (pageNumber = page) => {
@@ -77,18 +71,17 @@ export default function Index() {
       const newVideos = response;
 
       if (newVideos.length === 0) {
-        setHasMoreVideos(false); // Se não há mais vídeos, desabilita a busca
+        setHasMoreVideos(false);
         return;
       }
 
-      // Remove duplicatas com base no _id
       const uniqueVideos = newVideos.filter(
         (newVideo) =>
           !videos.some((existingVideo) => existingVideo._id === newVideo._id),
       );
 
       setVideos((prevVideos) => [...prevVideos, ...uniqueVideos]);
-      setPage(pageNumber + 1); // Incrementa a página
+      setPage(pageNumber + 1);
     } catch (error) {
       console.error("Erro ao carregar vídeos", error);
     } finally {
@@ -97,7 +90,6 @@ export default function Index() {
   };
 
   const handleViewableItemsChanged = useRef(({ viewableItems }) => {
-    console.log("Viewable items:", viewableItems);
     if (viewableItems.length > 0) {
       const index = viewableItems[0].index;
       if (index !== null && index !== undefined) {
@@ -123,7 +115,7 @@ export default function Index() {
   };
 
   const likeVideo = async (videoData: IVideo) => {
-    const liked = videoData.likes?.some((like: string) => like === user?._id);;
+    const liked = videoData.likes?.some((like: string) => like === user?._id);
 
     try {
       if (liked && user?._id) {
@@ -144,7 +136,7 @@ export default function Index() {
 
       setVideos(updatedVideos);
     } catch (error) {
-      console.log("error", error);
+      console.error("error", error);
     }
   };
 
@@ -160,13 +152,39 @@ export default function Index() {
               <VideoScreen
                 source={item.url}
                 isPlaying={currentIndex === index}
-                videoId={item.id}
+                videoId={item._id}
                 userId={item?.user_id || null}
               />
               <View style={styles.actionsContainer}>
                 <TouchableOpacity
                   onPress={() => {
-                    console.log("like");
+                    console.log("profile");
+                  }}
+                  style={styles.buttons}
+                >
+                  <Image
+                    source={{
+                      uri:
+                        item.user?.profileImage || "https://picsum.photos/200",
+                    }}
+                    style={[
+                      styles.icon,
+                      {
+                        width: 38,
+                        height: 38,
+                        borderRadius: 50,
+                        zIndex: 1,
+                        borderColor: "white",
+                        borderWidth: 1,
+                      },
+                    ]}
+                  />
+                  <Text style={{ color: "white" }}>
+                    {item.user?.userName || "user"}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
                     liked = !liked;
                     likeVideo(item);
                     sendVideoInteractionData("like", item._id);
@@ -183,7 +201,6 @@ export default function Index() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
-                    console.log("comments");
                     setVideoSelected(item);
                     setShowCommentsModal(!showCommentsModal);
                     sendVideoInteractionData("comment", item._id);
@@ -248,7 +265,7 @@ export default function Index() {
 
 const styles = StyleSheet.create({
   actionsContainer: {
-    top: "70%",
+    top: "60%",
     right: 20,
     position: "absolute",
     transform: [{ translateY: -32 }],

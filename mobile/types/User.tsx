@@ -9,4 +9,5 @@ export interface User {
   tastes: string[];
   followers: string[];
   following: string[];
+  profileImage: string;
 }

@@ -1,3 +1,5 @@
+import { User } from "./User";
+
 export interface IVideo {
   _id: string;
   title: string;
@@ -9,9 +11,5 @@ export interface IVideo {
   comments: string[];
   likes: string[];
   user_id: string;
-}
-
-export interface ListVideoResponse {
-  total_num_videos: number;
-  videos: IVideo[];
+  user: User;
 }

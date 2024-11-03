@@ -9,8 +9,6 @@ export const getUserVideos = async (
       method: "GET",
       url: `videos/getUserVideos?userId=${userId}`,
     });
-
-    console.log("Response videos:", response.data);
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar os vídeos do usuário", error);

@@ -1,6 +1,7 @@
+import { User } from "@/types/User";
 import { api } from "./api";
 
-import { IVideo, ListVideoResponse } from "@/types/Video";
+import { IVideo } from "@/types/Video";
 
 interface IVideoData {
   videoUri: string;
@@ -33,7 +34,7 @@ export const getVideos = async (page: number, userId: string) => {
 
     console.log("Response videos:", response.data);
 
-    return response.data as ListVideoResponse;
+    return response.data as IVideo[];
   } catch (error) {
     console.log("Erro ao buscar vídeos:", JSON.stringify(error));
     console.error("Erro ao buscar vídeos:", error);
@@ -48,9 +49,7 @@ export const getVideoById = async (videoId: string) => {
       url: `videos/getVideo?videoId=${videoId}`,
     });
 
-    console.log("Response video:", response.data);
-
-    return response.data as IVideo;
+    return response.data.video as IVideo;
   } catch (error) {
     console.error("Erro ao buscar o vídeo", error);
     throw error;
@@ -123,7 +122,6 @@ export const postComment = async (
   comment: string,
 ) => {
   try {
-    console.log("Post comment:", videoId, userId, comment);
     const response = await api({
       method: "POST",
       url: "videos/postComment",
@@ -134,7 +132,6 @@ export const postComment = async (
       },
     });
 
-    console.log("Response comment:", response.data);
     return response.data;
   } catch (error) {
     console.error("Erro ao postar o comentário", error);
@@ -152,7 +149,7 @@ export const uploadVideoToBackend = async ({
 }: IVideoData) => {
   try {
     const responseVideo = await fetch(videoUri);
-    console.log("Response video:", responseVideo);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const blob = (await responseVideo.blob()) as any;
 
@@ -180,7 +177,6 @@ export const uploadVideoToBackend = async ({
 
     if (uploadResponse.ok) {
       const publicUrl = `https://storage.googleapis.com/${bucketName}/${name}`;
-      console.log("Public URL:", publicUrl);
 
       await postUserVideo({
         uploadUrl: publicUrl,
@@ -191,7 +187,6 @@ export const uploadVideoToBackend = async ({
         userId,
       });
 
-      console.log("Upload concluído!");
       return publicUrl;
     }
   } catch (error) {
@@ -222,7 +217,6 @@ const postUserVideo = async ({
       },
     });
 
-    console.log("Response post video:", response.data);
     return response.data;
   } catch (error) {
     console.error("Erro ao postar video:", error);

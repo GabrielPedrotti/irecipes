@@ -77,16 +77,11 @@ export default function CreatePost() {
     });
   }, [navigation, videoUri]);
 
-  useEffect(() => {
-    console.log("errors", errors);
-  }, [errors]);
-
   const pickVideo = async () => {
     setLoadingVideo(true);
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Videos,
     });
-    console.log(result);
 
     if (!result.canceled) {
       const thumbnail = await VideoThumbnails.getThumbnailAsync(
@@ -112,16 +107,13 @@ export default function CreatePost() {
 
   const onSubmit = async (data: FormData) => {
     setUploading(true);
-    console.log("aqui");
     Keyboard.dismiss();
-    console.log("user", user);
 
-    console.log("data", data);
     try {
       // Chama a função de upload passando o URI do vídeo
-      const title = "Test";
-      const description = "Test";
-      const tags = ["hamburger"];
+      const title = data.title;
+      const description = data.description;
+      const tags = data.tags;
       const duration = videoAssets?.duration as any;
       const userId = user._id as any;
 

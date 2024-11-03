@@ -68,12 +68,19 @@ def recommended_videos():
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 20))
 
-    # Busca o vídeo recém-postado se o ID for fornecido
     posted_video = None
     if posted_video_id:
         posted_video = get_db().videos.find_one({"_id": ObjectId(posted_video_id)})
+        if posted_video:
+            posted_video_user = get_db().users.find_one({"_id": ObjectId(posted_video.get('user_id'))})
+            if posted_video_user:
+                posted_video['user'] = {
+                    "userId": str(posted_video_user['_id']),
+                    "name": posted_video_user.get('name'),
+                    "username": posted_video_user.get('username'),
+                    "profileImage": posted_video_user.get('profileImage')
+                }
     
-    # Verifica se o usuário existe
     if not user_id:
         videos, total_num_videos = get_videos({}, page, limit)
         videos_list = [posted_video] + videos if posted_video else videos
@@ -83,12 +90,10 @@ def recommended_videos():
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    # Processa recomendações baseado nos gostos e interações
     tastes = user.get('tastes', [])
     user_interactions = list(get_db().videoInteractions.find({"userId": user_id}))
     interacted_videos = [interaction['videoId'] for interaction in user_interactions]
 
-    # Caso não tenha interações, inicializa com uma lista vazia
     if not user_interactions:
         interacted_videos = []
 
@@ -102,7 +107,6 @@ def recommended_videos():
 
     taste_weights = {taste: 0 for taste in tastes}
 
-    # Calcula o peso dos gostos baseados nas interações
     if user_interactions:
         video_ids = [ObjectId(interaction['videoId']) for interaction in user_interactions]
         videos = list(get_db().videos.find({"_id": {"$in": video_ids}}))
@@ -122,7 +126,6 @@ def recommended_videos():
                 else:
                     taste_weights[taste] = relevance_score
 
-    # Ordena os gostos por peso
     sorted_tastes = sorted(taste_weights.items(), key=lambda x: x[1], reverse=True)
     sorted_tastes = [taste for taste, _ in sorted_tastes]
 
@@ -132,7 +135,6 @@ def recommended_videos():
     skip = (page - 1) * limit
 
     try:
-        # Busca vídeos recomendados baseados nos gostos e que o usuário ainda não interagiu
         recommended_videos_cursor = get_db().videos.aggregate([
             {
                 "$match": {
@@ -152,13 +154,22 @@ def recommended_videos():
 
         recommended_videos = list(recommended_videos_cursor)
 
-        # Se houver um vídeo postado, coloca ele no início da lista de vídeos recomendados
+        for video in recommended_videos:
+            print('video', video)
+            user_data = get_db().users.find_one({"_id": ObjectId(video.get('user_id'))})
+            if user_data:
+                video['user'] = {
+                    "userId": str(user_data['_id']),
+                    "name": user_data.get('name'),
+                    "userName": user_data.get('userName'),
+                    "profileImage": user_data.get('profileImage')
+                }
+
         if posted_video:
             recommended_videos.insert(0, posted_video)
 
         return jsonify(recommended_videos), 200
     except pymongo.errors.PyMongoError as e:
         return jsonify({"error": str(e)}), 500
-
 
    

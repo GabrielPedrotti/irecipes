@@ -45,7 +45,6 @@ export default function VideoScreen({
   }, [isPlaying]);
 
   useEffect(() => {
-    console.log("navigation:", navigation);
     const unsubscribe = navigation.addListener("blur", () => {
       player.pause();
     });
@@ -53,12 +52,11 @@ export default function VideoScreen({
     return unsubscribe;
   }, [navigation]);
 
-  player.addListener("blur", () => {
-    console.log("here");
-  });
+  // player.addListener("blur", () => {
+  //   console.log("here");
+  // });
 
   useEffect(() => {
-    console.log("player:", player);
     const subscription = player.addListener("playingChange", (isPlaying) => {
       setIsVideoPlaying(isPlaying);
     });

@@ -1,16 +1,19 @@
 from flask import Blueprint, request, jsonify
 from db import get_users, add_user, update_user, db
 from flask_cors import CORS
-from datetime import datetime
+from datetime import datetime, timedelta
 from utils.hashPassword import hashPassword, checkPassword
 from bson import ObjectId
 from pymongo.errors import OperationFailure
-
+from google.cloud import storage
 class UserAlreadyExistsError(Exception):
     pass
 
 users = Blueprint('users', 'users', url_prefix='/api/v1/users')
 CORS(users)
+
+storage_client = storage.Client.from_service_account_json('C:/Users/gabri/Desktop/iRecipes/irecipes/api/secret/videoUploader.json')
+bucket_name = 'irecipes-images'
 
 @users.route('/', methods=['GET'])
 def getUsers():
@@ -194,4 +197,31 @@ def unfollow():
         return jsonify({"message": "User unfollowed successfully"}), 200
     
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@users.route('/<user_id>/uploadProfileImage', methods=['POST'])
+def uploadProfileImage(user_id):
+    try:
+        file_data = request.get_data()
+        content_type = request.headers.get('Content-Type')
+
+        if not file_data:
+            return jsonify({"error": "No data found in the request"}), 400
+
+        bucket = storage_client.bucket(bucket_name)
+        blob = bucket.blob(f"profileImages/{user_id}")
+        blob.upload_from_string(file_data, content_type=content_type)
+
+        print(blob.public_url)
+
+        signed_url = blob.generate_signed_url(expiration=timedelta(days=50000))
+
+        db.users.find_one_and_update(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"profileImage": signed_url}}
+        )
+
+        return jsonify({"message": "Image uploaded successfully", "data": blob.public_url}), 200
+    except Exception as e:
+        print('error:', e)
         return jsonify({"error": str(e)}), 500

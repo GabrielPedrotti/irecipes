@@ -33,7 +33,6 @@ export const AuthProvider = ({ children }: any) => {
       method: "GET",
       url: `users/${userId}`,
     });
-    console.log("User:", userResponse);
     setUser(userResponse.data);
     await AsyncStorage.setItem("user", JSON.stringify(userResponse.data));
   };
