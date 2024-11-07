@@ -84,7 +84,7 @@ def recommended_videos():
     if not user_id:
         videos, total_num_videos = get_videos({}, page, limit)
         videos_list = [posted_video] + videos if posted_video else videos
-        return jsonify({"videos": videos_list, "total_num_videos": total_num_videos}), 200
+        return jsonify(videos_list), 200
 
     user = get_db().users.find_one({"_id": ObjectId(user_id)})
     if not user:

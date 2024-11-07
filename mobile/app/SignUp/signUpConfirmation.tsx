@@ -11,11 +11,43 @@ import {
 import { api } from "../../service/api";
 import Checkbox from "expo-checkbox";
 import Button from "../../components/FormComponents/Button";
-import pasta from "../../assets/images/pasta.jpeg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Colors } from "../../constants/Colors";
 import { AuthContext } from "../../context/AuthContext";
 import ErrorModal from "@/components/ErrorModal";
+import { useNavigation } from "@react-navigation/native";
+
+import pastaImage from "../../assets/images/pasta.jpeg";
+import pizzaImage from "../../assets/images/pizza.jpg";
+import hamburgerImage from "../../assets/images/hamburger.jpg";
+import sushiImage from "../../assets/images/sushi.jpg";
+import iceCreamImage from "../../assets/images/iceCream.jpeg";
+import coffeeImage from "../../assets/images/coffee.png";
+import beerImage from "../../assets/images/beer.jpg";
+import glutenFreeImage from "../../assets/images/glutenFree.jpg";
+import bbqImage from "../../assets/images/bbq.jpg";
+import veganImage from "../../assets/images/vegan.jpeg";
+import vegetarianImage from "../../assets/images/vegetarian.jpg";
+import fitImage from "../../assets/images/fit.jpg";
+import fastFoodImage from "../../assets/images/fastFood.jpg";
+import dessertImage from "../../assets/images/dessert.jpg";
+
+const imageMap: { [key: string]: any } = {
+  pasta: pastaImage,
+  pizza: pizzaImage,
+  hamburger: hamburgerImage,
+  sushi: sushiImage,
+  iceCream: iceCreamImage,
+  coffee: coffeeImage,
+  beer: beerImage,
+  glutenFree: glutenFreeImage,
+  bbq: bbqImage,
+  vegan: veganImage,
+  vegetarian: vegetarianImage,
+  fit: fitImage,
+  fastFood: fastFoodImage,
+  dessert: dessertImage,
+};
 
 interface confirmationData {
   userName: string;
@@ -28,6 +60,7 @@ interface confirmationData {
 }
 
 export default function SignUpConfirmation() {
+  const navigation = useNavigation();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [tastes, setTastes] = useState<string[]>([]);
@@ -38,7 +71,7 @@ export default function SignUpConfirmation() {
 
   const data = {
     ...queryParams,
-    birthDate: new Date(queryParams.birthDate as string), // Convert string back to Date
+    birthDate: new Date(queryParams.birthDate as string),
     useTerms: queryParams.useTerms === "Accepted",
   } as confirmationData;
 
@@ -53,7 +86,7 @@ export default function SignUpConfirmation() {
         },
       });
 
-      setUserLogin(response.data);
+      setUserLogin(response.data.user);
       return response;
     } catch (error: any) {
       setShowErrorModal(true);
@@ -83,13 +116,7 @@ export default function SignUpConfirmation() {
     <SafeAreaView>
       <ScrollView style={{ marginBottom: 60 }}>
         <View style={styles.container}>
-          <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "bold",
-              marginBottom: 10,
-            }}
-          >
+          <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 10 }}>
             Selecione seus interesses
           </Text>
           <View
@@ -104,10 +131,7 @@ export default function SignUpConfirmation() {
               <TouchableOpacity
                 activeOpacity={0.8}
                 key={index}
-                style={{
-                  marginBottom: 20,
-                  overflow: "hidden",
-                }}
+                style={{ marginBottom: 20, overflow: "hidden" }}
                 onPress={() => {
                   if (tastes.includes(taste.id)) {
                     setTastes(tastes.filter((t) => t !== taste.id));
@@ -117,7 +141,11 @@ export default function SignUpConfirmation() {
                 }}
               >
                 <View>
-                  <Image source={pasta} style={styles.image} blurRadius={4} />
+                  <Image
+                    source={imageMap[taste.id]}
+                    style={styles.image}
+                    blurRadius={2}
+                  />
                   {tastes.includes(taste.id) && (
                     <Checkbox
                       value={tastes.includes(taste.id)}
@@ -133,10 +161,8 @@ export default function SignUpConfirmation() {
                   <View
                     style={{
                       position: "absolute",
-                      // right: 10,
                       top: 115,
                       left: 10,
-                      // backgroundColor: "black",
                       borderRadius: 10,
                       padding: 5,
                     }}
@@ -144,11 +170,11 @@ export default function SignUpConfirmation() {
                     <Text
                       style={{
                         color: "white",
-                        fontWeight: 900,
+                        fontWeight: "900",
                         fontSize: 18,
                       }}
                     >
-                      {taste.name}
+                      {taste.title}
                     </Text>
                   </View>
                 </View>
@@ -190,6 +216,7 @@ export default function SignUpConfirmation() {
           onClick={async () => {
             setIsLoading(true);
             await onSubmit(data);
+            router.push("/");
             setIsLoading(false);
           }}
           disabled={tastes.length < 5}
@@ -219,9 +246,6 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 16,
-    // alignContent: "center",
-    // justifyContent: "center",
-    // alignItems: "center",
     margin: 10,
     marginTop: 30,
   },

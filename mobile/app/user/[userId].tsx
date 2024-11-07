@@ -8,29 +8,51 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import { getUserVideos } from "@/service/userVideo";
 import { IVideo } from "@/types/Video";
 import * as VideoThumbnails from "expo-video-thumbnails";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { Colors } from "@/constants/Colors";
-import * as ImagePicker from "expo-image-picker";
-import { uploadProfileImage } from "@/service/user";
+import { User } from "@/types/User";
+import { api } from "@/service/api";
+import { followUser, unfollowUser } from "@/service/user";
 import Button from "../../components/FormComponents/Button";
-import { Modal } from "native-base";
 
 export default function UserProfile() {
-  const { user, setUserLogin, logout } = useContext(AuthContext);
+  const { user: authUser } = useContext(AuthContext);
+  const { userId } = useLocalSearchParams();
   const [videos, setVideos] = useState<IVideo[]>([]);
   const [thumbnails, setThumbnails] = useState<{ [key: string]: string }>({});
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
-  const [loadingPhoto, setLoadingPhoto] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [loadingFollow, setLoadingFollow] = useState(false);
+  const [isLoadingUser, setIsLoadingUser] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    if (userId) {
+      fetchUser(userId);
+    }
+  }, [userId]);
+
+  const fetchUser = async (userId: string | string[]) => {
+    setIsLoadingUser(true);
+    try {
+      const userResponse = await api({
+        method: "GET",
+        url: `users/${userId}`,
+      });
+      setUser(userResponse.data);
+      setIsLoadingUser(false);
+    } catch (error) {
+      console.warn(`Failed to fetch user: ${error}`);
+      setIsLoadingUser(false);
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
@@ -50,7 +72,6 @@ export default function UserProfile() {
     setIsLoading(true);
     if (user) {
       const userVideos = await getUserVideos(user._id);
-
       if (userVideos.videos.length > 0) {
         setVideos(userVideos.videos);
       } else {
@@ -68,8 +89,16 @@ export default function UserProfile() {
               time: 15000,
             });
             setThumbnails((prev) => ({ ...prev, [video._id]: uri }));
-          } catch (e: any) {
-            console.warn(`Failed to generate thumbnail for video ${video._id}`);
+          } catch (e: unknown) {
+            if (e instanceof Error) {
+              console.warn(
+                `Failed to generate thumbnail for video ${video._id}: ${e.message}`,
+              );
+            } else {
+              console.warn(
+                `Failed to generate thumbnail for video ${video._id}`,
+              );
+            }
           }
         }
       }
@@ -140,132 +169,87 @@ export default function UserProfile() {
     </View>
   );
 
-  const pickImage = async () => {
-    setLoadingPhoto(true);
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    });
+  const userFollows = user?.followers?.includes(authUser?._id ?? "");
 
-    if (!result.canceled) {
-      const responseImage = await fetch(result.assets[0].uri);
-      const blob = await responseImage.blob();
-
-      try {
-        await uploadProfileImage(user?._id || "", blob);
-        if (user) {
-          await setUserLogin(user);
-        }
-        await fetchUserVideos();
-      } catch (error) {
-        console.error("Error uploading profile image", error);
-      }
-
-      setLoadingPhoto(false);
+  const handleFollow = async (userId: string) => {
+    if (userFollows) {
+      await unfollowUser(authUser?._id ?? "", userId);
     } else {
-      setLoadingPhoto(false);
+      await followUser(authUser?._id ?? "", userId);
     }
+    await fetchUser(userId);
+    setLoadingFollow(false);
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.profileHeaderContainer}>
-        <TouchableOpacity
-          disabled={loadingPhoto}
-          onPress={pickImage}
-          style={styles.uploadProfileImage}
-        >
-          {loadingPhoto ? (
-            <ActivityIndicator
-              style={{ position: "absolute", top: 100, right: 85, zIndex: 1 }}
-              size="small"
-              color="black"
-            />
-          ) : (
-            <Ionicons
-              name="camera"
-              size={24}
-              color="black"
-              style={{ position: "absolute", top: 100, right: 85, zIndex: 1 }}
-            />
-          )}
-
-          <Image
-            source={{
-              uri: user?.profileImage || "https://via.placeholder.com/100",
-            }}
-            style={styles.profileImage}
-          />
-        </TouchableOpacity>
-        <Text style={styles.profileName}>{user?.userName}</Text>
-        <View style={styles.followInfo}>
-          <View style={styles.followersContainer}>
-            <Text style={styles.followersNumber}>
-              {user?.followers?.length}
-            </Text>
-            <Text style={styles.followersLabel}>Followers</Text>
-          </View>
-          <View style={styles.followingContainer}>
-            <Text style={styles.followingNumber}>
-              {user?.following?.length}
-            </Text>
-            <Text style={styles.followingLabel}>Following</Text>
-          </View>
-        </View>
-        <View style={styles.optionsSection}>
-          <Button
-            style={styles.editProfileButton}
-            title="Edit Profile"
-            color={"primary"}
-            onClick={() => {
-              logout();
-              router.push("/");
-            }}
-          />
-
-          <Button
-            style={styles.LogoutButton}
-            title="Sair?"
-            color={"secondary"}
-            onClick={() => {
-              setShowModal(!showModal);
-            }}
-          />
-          <Modal isOpen={showModal} onClose={() => setShowModal(!showModal)}>
-            <Modal.Content>
-              <Modal.CloseButton />
-              <Modal.Header>Sair</Modal.Header>
-              <Modal.Body>
-                <Text>Tem certeza que deseja sair?</Text>
-                <Button
-                  style={{ marginTop: 16 }}
-                  title="Sair"
-                  color={"primary"}
-                  onClick={async () => {
-                    await logout();
-                    router.push("/");
-                    setShowModal(!showModal);
-                  }}
-                />
-              </Modal.Body>
-            </Modal.Content>
-          </Modal>
-        </View>
-      </View>
-      <View
-        style={{
-          borderBottomColor: "black",
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          paddingBottom: 16,
-          paddingTop: 16,
-        }}
-      />
-      {isLoading ? (
-        <ActivityIndicator
-          style={{ marginTop: 24 }}
-          size="large"
-          color="#0000ff"
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <Ionicons
+          name="arrow-back"
+          size={36}
+          color="black"
+          style={styles.icon}
         />
-      ) : !isLoading && videos.length > 0 ? (
+      </TouchableOpacity>
+
+      {isLoadingUser || isLoading ? (
+        <ActivityIndicator style={styles.loading} size="large" color="black" />
+      ) : (
+        <>
+          <View style={styles.profileHeaderContainer}>
+            <TouchableOpacity
+              disabled={true}
+              onPress={() => {}}
+              style={styles.uploadProfileImage}
+            >
+              <Image
+                source={{
+                  uri: user?.profileImage || "https://via.placeholder.com/100",
+                }}
+                style={styles.profileImage}
+              />
+            </TouchableOpacity>
+            <Text style={styles.profileName}>{user?.userName}</Text>
+            <View style={styles.followInfo}>
+              <View style={styles.followersContainer}>
+                <Text style={styles.followersNumber}>
+                  {user?.followers?.length}
+                </Text>
+                <Text style={styles.followersLabel}>Followers</Text>
+              </View>
+              <View style={styles.followingContainer}>
+                <Text style={styles.followingNumber}>
+                  {user?.following?.length}
+                </Text>
+                <Text style={styles.followingLabel}>Following</Text>
+              </View>
+            </View>
+            <View style={styles.followSection}>
+              <Button
+                style={styles.followButton}
+                title={userFollows ? "Unfollow" : "Follow"}
+                color={userFollows ? "secondary" : "primary"}
+                isLoading={loadingFollow}
+                disabled={loadingFollow}
+                onClick={() => {
+                  setLoadingFollow(!loadingFollow);
+                  handleFollow(user?._id ?? "");
+                }}
+              />
+            </View>
+          </View>
+          <View
+            style={{
+              borderBottomColor: "black",
+              borderBottomWidth: StyleSheet.hairlineWidth,
+              paddingBottom: 16,
+              paddingTop: 16,
+            }}
+          />
+        </>
+      )}
+
+      {!isLoading && !isLoadingUser && videos.length > 0 ? (
         <FlatList
           data={videos}
           renderItem={renderVideoItem}
@@ -276,13 +260,17 @@ export default function UserProfile() {
             alignItems: "center",
           }}
         />
-      ) : (
+      ) : !isLoading && !isLoadingUser && videos.length === 0 ? (
         <Text
-          style={{ textAlign: "center", alignItems: "center", marginTop: 24 }}
+          style={{
+            textAlign: "center",
+            alignItems: "center",
+            marginTop: 24,
+          }}
         >
-          Você ainda não postou nenhuma receita!
+          Este usuário ainda não postou nenhum vídeo!
         </Text>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -311,9 +299,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   followInfo: {
-    flexDirection: "row", // Mostra os seguidores e seguindo lado a lado
+    flexDirection: "row",
     justifyContent: "space-around",
-    width: "60%", // Ajusta o tamanho da seção de seguidores
+    width: "60%",
     marginTop: 8,
     marginBottom: 16,
   },
@@ -360,29 +348,36 @@ const styles = StyleSheet.create({
     height: 150,
     margin: 5,
   },
-  optionsSection: {
+  followSection: {
     flexDirection: "row",
     justifyContent: "space-around",
     width: "60%",
     marginTop: 16,
   },
-  editProfileButton: {
-    backgroundColor: Colors.red.brand,
-    padding: 10,
+  followButton: {
     borderRadius: 5,
-    width: "45%",
-    alignItems: "center",
-  },
-  LogoutButton: {
-    padding: 10,
-    borderRadius: 5,
-    width: "45%",
+    width: "80%",
     alignItems: "center",
   },
   uploadProfileImage: {
     padding: 10,
     borderRadius: 5,
     width: "80%",
+    alignItems: "center",
+  },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 20,
+    zIndex: 1000,
+  },
+  icon: {
+    elevation: 5,
+  },
+  loading: {
+    flex: 1,
+    marginTop: 200,
+    justifyContent: "center",
     alignItems: "center",
   },
 });

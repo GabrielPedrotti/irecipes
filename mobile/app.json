@@ -19,7 +19,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000000"
-      }
+      },
+      "package": "com.gabrielpedrotti.iRecipes"
     },
     "web": {
       "bundler": "metro",

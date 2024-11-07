@@ -159,6 +159,7 @@ def get_videos(filters, page, videosPerPage):
     query, project = build_query_sort_project(filters)
     print('query', query)
     print('project', project)
+    
     if project:
         cursor = db.videos.find(query, project)
     else:
@@ -169,8 +170,19 @@ def get_videos(filters, page, videosPerPage):
         total_num_videos = db.videos.count_documents(query)
 
     videos = cursor.limit(videosPerPage)
+    video_list = list(videos)
 
-    return (list(videos), total_num_videos)
+    for video in video_list:
+        user_data = db.users.find_one({"_id": ObjectId(video.get('user_id'))})
+        if user_data:
+            video['user'] = {
+                "userId": str(user_data['_id']),
+                "name": user_data.get('name'),
+                "userName": user_data.get('userName'),
+                "profileImage": user_data.get('profileImage')
+            }
+
+    return (video_list, total_num_videos)
 
 def add_video(video, user_id):
     """

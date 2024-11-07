@@ -9,11 +9,9 @@ interface IApi {
 }
 
 export const api = ({ method, url, data = null, headers = null }: IApi) => {
-  const apiUrl = process.env.API_URL;
-  console.log("API URL:", apiUrl);
   return axios({
     method,
-    url: `https://d505-45-163-75-116.ngrok-free.app/api/v1/${url}`,
+    url: process.env.EXPO_PUBLIC_API_URL + url,
     data,
     headers,
   });

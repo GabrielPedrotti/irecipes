@@ -42,18 +42,21 @@ export default function Index() {
     if (user?._id) {
       setUserLogin(user);
       resetVideos();
+    } else if (!isUserLoggedIn) {
+      resetVideos();
     }
   }, [user?._id]);
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", () => {
-      if (user?._id) {
-        resetVideos();
-      }
-    });
+  // useEffect(() => {
+  //   console.log("unsubscribasdasdasdase", user);
+  //   const unsubscribe = navigation.addListener("focus", () => {
+  //     if (user?._id) {
+  //       resetVideos();
+  //     }
+  //   });
 
-    return unsubscribe;
-  }, [navigation, user?._id]);
+  //   return unsubscribe;
+  // }, [navigation, user?._id]);
 
   const resetVideos = async () => {
     setPage(1);
@@ -158,7 +161,19 @@ export default function Index() {
               <View style={styles.actionsContainer}>
                 <TouchableOpacity
                   onPress={() => {
-                    console.log("profile");
+                    if (!isUserLoggedIn) {
+                      router.push("/login");
+                      return;
+                    }
+
+                    if (item?.user_id === user?._id) {
+                      router.push("/userProfile");
+                    } else {
+                      router.push({
+                        pathname: `/user/[userId]`,
+                        params: { userId: item?.user_id },
+                      });
+                    }
                   }}
                   style={styles.buttons}
                 >
@@ -239,8 +254,8 @@ export default function Index() {
         showsVerticalScrollIndicator={false}
         onViewableItemsChanged={handleViewableItemsChanged}
         viewabilityConfig={viewabilityConfig.current}
-        onEndReached={() => fetchVideos(page)} // Chama a função quando atinge o final da lista
-        onEndReachedThreshold={0.5} // Quando carregar mais (50% antes de atingir o final)
+        onEndReached={() => fetchVideos(page)}
+        onEndReachedThreshold={0.5}
         ListFooterComponent={
           isLoading ? (
             <ActivityIndicator
@@ -251,6 +266,7 @@ export default function Index() {
           ) : null
         }
       />
+
       {videoSelected && user?._id && showCommentsModal && (
         <CommentsModal
           isVisible={showCommentsModal}

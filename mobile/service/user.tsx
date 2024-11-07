@@ -23,7 +23,7 @@ export const uploadProfileImage = async (userId: string, image: Blob) => {
     const file = new File([image], "profileImage.jpg", { type: image.type });
     formData.append("file", file);
 
-    const uploadUrl = `https://d505-45-163-75-116.ngrok-free.app/api/v1/users/${userId}/uploadProfileImage`;
+    const uploadUrl = `${process.env.EXPO_PUBLIC_API_URL}users/${userId}/uploadProfileImage`;
 
     const response = await fetch(uploadUrl, {
       method: "POST",
@@ -36,6 +36,42 @@ export const uploadProfileImage = async (userId: string, image: Blob) => {
     return response;
   } catch (error) {
     console.error("Erro ao atualizar a imagem de perfil", error);
+    throw error;
+  }
+};
+
+export const followUser = async (userId: string, followId: string) => {
+  try {
+    const response = await api({
+      method: "POST",
+      url: `users/follow`,
+      data: {
+        userId,
+        followId,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao seguir o usuário", error);
+    throw error;
+  }
+};
+
+export const unfollowUser = async (userId: string, followId: string) => {
+  try {
+    const response = await api({
+      method: "POST",
+      url: `users/unfollow`,
+      data: {
+        userId,
+        followId,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao deixar de seguir o usuário", error);
     throw error;
   }
 };

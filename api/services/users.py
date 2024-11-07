@@ -12,7 +12,7 @@ class UserAlreadyExistsError(Exception):
 users = Blueprint('users', 'users', url_prefix='/api/v1/users')
 CORS(users)
 
-storage_client = storage.Client.from_service_account_json('C:/Users/gabri/Desktop/iRecipes/irecipes/api/secret/videoUploader.json')
+storage_client = storage.Client.from_service_account_json('secret/videoUploader.json')
 bucket_name = 'irecipes-images'
 
 @users.route('/', methods=['GET'])
@@ -81,7 +81,7 @@ def postUser():
 
         user_id = add_user(user)
 
-        return jsonify({"message": "User created successfully", user: { "_id": user_id }}), 201
+        return jsonify({"message": "User created successfully", "user": { "_id": user_id }}), 201
 
     except UserAlreadyExistsError as e:
         return jsonify({"error": str(e)}), 400
@@ -115,12 +115,17 @@ def putUser(user_id):
 
 @users.route('/<user_id>', methods=['GET'])
 def getUser(user_id):
-    user = db.users.find_one({"_id": ObjectId(user_id)})
-
-    if not user:
-        return None
-
-    return user
+    try:
+        if not user_id or not ObjectId.is_valid(user_id):
+            return jsonify({"error": "Invalid user ID provided"}), 400
+        
+        user = db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        return jsonify(user), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 def getUserByEmail(email):
     user = db.users.find_one({"email": email})

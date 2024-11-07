@@ -8,7 +8,7 @@ from bson import ObjectId
 videos = Blueprint('videos', 'videos', url_prefix='/api/v1/videos')
 CORS(videos)
 
-storage_client = storage.Client.from_service_account_json('C:/Users/gabri/Desktop/iRecipes/irecipes/api/secret/videoUploader.json')
+storage_client = storage.Client.from_service_account_json('secret/videoUploader.json')
 bucket_name = 'irecipes-videos'
 
 @videos.route('/uploadVideo', methods=['POST'])
