@@ -9,6 +9,8 @@ import {
   Text,
   ActivityIndicator,
   Image,
+  ScrollView,
+  Share,
 } from "react-native";
 import { IVideo } from "@/types/Video";
 import VideoScreen from "@/components/VideoPlayer";
@@ -21,6 +23,7 @@ import { sendInteractionData } from "@/service/videoInteraction";
 import { postLike, deleteLike, getLikes } from "@/service/video";
 import { useNavigation } from "@react-navigation/native";
 import CommentsModal from "@/components/VideoComponents/CommentsModal";
+import { Colors } from "@/constants/Colors";
 
 export default function Index() {
   const [videos, setVideos] = useState<IVideo[]>([]);
@@ -30,6 +33,7 @@ export default function Index() {
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMoreVideos, setHasMoreVideos] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 80 });
   const { height } = Dimensions.get("window");
   const tabBarHeight = useBottomTabBarHeight();
@@ -37,6 +41,7 @@ export default function Index() {
   const router = useRouter();
   const { user, setUserLogin } = useContext(AuthContext);
   const isUserLoggedIn = !!user;
+  const MAX_LENGTH = 100;
 
   useEffect(() => {
     if (user?._id) {
@@ -46,6 +51,10 @@ export default function Index() {
       resetVideos();
     }
   }, [user?._id]);
+
+  useEffect(() => {
+    setIsExpanded(false);
+  }, [currentIndex]);
 
   // useEffect(() => {
   //   console.log("unsubscribasdasdasdase", user);
@@ -143,6 +152,29 @@ export default function Index() {
     }
   };
 
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const shareVideo = async (videoId: string) => {
+    try {
+      const shareUrl = `https://irecipes.com/videos/${videoId}`;
+      const result = await Share.share({
+        message: `Gostei dessa receita, vamos fazer? ${shareUrl}`,
+      });
+
+      // handle results if needed in the future
+      // if (result.action === Share.sharedAction) {
+      //   if (result.activityType) {
+      //   } else {
+      //   }
+      // } else if (result.action === Share.dismissedAction) {
+      // }
+    } catch (error) {
+      console.error("Error sharing video:", error);
+    }
+  };
+
   return (
     <>
       <FlatList
@@ -156,8 +188,39 @@ export default function Index() {
                 source={item.url}
                 isPlaying={currentIndex === index}
                 videoId={item._id}
+                videoData={item}
                 userId={item?.user_id || null}
               />
+              <View style={styles.videoInfoContainer}>
+                <Text style={[styles.text, styles.title]}>{item.title}</Text>
+                <View style={styles.descriptionContainer}>
+                  <ScrollView
+                    style={
+                      isExpanded
+                        ? styles.scrollContainerExpanded
+                        : styles.scrollContainer
+                    }
+                    contentContainerStyle={styles.scrollContent}
+                    nestedScrollEnabled={true}
+                  >
+                    <Text style={[styles.text, styles.description]}>
+                      {isExpanded
+                        ? item.description
+                        : item.description.slice(0, MAX_LENGTH)}
+                      {item.description.length > MAX_LENGTH && !isExpanded
+                        ? "..."
+                        : ""}
+                    </Text>
+                  </ScrollView>
+                  {item.description.length > MAX_LENGTH && (
+                    <TouchableOpacity onPress={toggleExpand}>
+                      <Text style={styles.showMoreText}>
+                        {isExpanded ? "Mostrar Menos" : "Mostrar Mais"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
               <View style={styles.actionsContainer}>
                 <TouchableOpacity
                   onPress={() => {
@@ -228,11 +291,11 @@ export default function Index() {
                     color="white"
                     style={styles.icon}
                   />
-                  <Text style={{ color: "white" }}>Comments</Text>
+                  <Text style={{ color: "white" }}>Comentários</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
-                    console.log("Shares");
+                    shareVideo(item._id);
                     sendVideoInteractionData("share", item._id);
                   }}
                   style={styles.buttons}
@@ -243,7 +306,7 @@ export default function Index() {
                     color="white"
                     style={styles.icon}
                   />
-                  <Text style={{ color: "white" }}>Share</Text>
+                  <Text style={{ color: "white" }}>Compartilhar</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -296,5 +359,46 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 4,
     elevation: 5,
+  },
+  text: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 5,
+    color: "white",
+  },
+  title: {
+    marginBottom: 10,
+    fontWeight: "bold",
+    fontSize: 20,
+  },
+  description: {
+    marginBottom: 10,
+    flexWrap: "wrap",
+  },
+  descriptionContainer: {
+    marginBottom: 10,
+  },
+  showMoreText: {
+    color: Colors.red.brand,
+    marginTop: 5,
+    fontWeight: "bold",
+  },
+  videoInfoContainer: {
+    position: "absolute",
+    bottom: 40,
+    zIndex: 1000,
+    width: "78%",
+    padding: 10,
+  },
+  scrollContainer: {
+    maxHeight: 100,
+  },
+  scrollContainerExpanded: {
+    maxHeight: 200,
+  },
+  scrollContent: {
+    paddingBottom: 16,
   },
 });

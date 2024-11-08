@@ -48,6 +48,14 @@ export default function Layout() {
               headerBackTitleVisible: false,
             }}
           />
+          <Stack.Screen
+            name="EditProfile/editProfile"
+            options={{
+              headerShown: false,
+              title: "Vídeo",
+              headerBackTitleVisible: false,
+            }}
+          />
         </Stack>
       </NativeBaseProvider>
     </AuthProvider>

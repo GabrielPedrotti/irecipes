@@ -6,16 +6,21 @@ import {
   TouchableWithoutFeedback,
   TouchableOpacity,
   ActivityIndicator,
+  Text,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { Slider } from "react-native-elements"; // Importação do Slider
 import { sendInteractionData } from "@/service/videoInteraction";
+import { IVideo } from "@/types/Video";
+import { Colors } from "@/constants/Colors";
 
 interface VideoProps {
   source: string;
   isPlaying: boolean;
-  videoId: string; // ID do vídeo
-  userId: string | null; // ID do usuário
+  videoId: string;
+  videoData: IVideo;
+  userId: string | null;
 }
 
 export default function VideoScreen({
@@ -23,10 +28,12 @@ export default function VideoScreen({
   isPlaying,
   videoId,
   userId,
+  videoData,
 }: VideoProps) {
   const ref = useRef(null);
   const [showControls, setShowControls] = useState(false);
-  const [videoDuration, setVideoDuration] = useState(0);
+  console.log("videoData", videoData);
+  const [videoDuration, setVideoDuration] = useState(videoData?.duration);
   const [currentTime, setCurrentTime] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -52,9 +59,16 @@ export default function VideoScreen({
     return unsubscribe;
   }, [navigation]);
 
-  // player.addListener("blur", () => {
-  //   console.log("here");
-  // });
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (player) {
+        const time = player.currentTime;
+        setCurrentTime(time);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [player]);
 
   useEffect(() => {
     const subscription = player.addListener("playingChange", (isPlaying) => {
@@ -65,11 +79,11 @@ export default function VideoScreen({
       "statusChange",
       (newStatus) => {
         setIsLoading(newStatus === "loading");
+        if (newStatus === "ready") {
+          setVideoDuration(player.duration);
+        }
       },
     );
-
-    setVideoDuration(player.duration);
-    setCurrentTime(player.currentTime);
 
     return () => {
       subscription.remove();
@@ -89,37 +103,10 @@ export default function VideoScreen({
     }
   }, [isPlaying, showControls]);
 
-  // Função para registrar a interação com o vídeo (curtir, comentar, compartilhar)
-  // const sendInteractionData = async (interactionType: string) => {
-  //   // if (!userId) {
-  //   //   navigation.navigate("/login");
-  //   //   return;
-  //   // }
-
-  //   try {
-  //     await axios.post("/api/videoInteraction", {
-  //       userId: userId,
-  //       videoId: videoId,
-  //       watchedTime: currentTime, // O tempo atual de reprodução do vídeo
-  //       liked: interactionType === "like",
-  //       commented: interactionType === "comment",
-  //       shared: interactionType === "share",
-  //       watchedComplete: currentTime >= videoDuration, // Se o vídeo foi assistido até o final
-  //     });
-  //   } catch (error) {
-  //     console.error("Erro ao registrar a interação", error);
-  //   }
-  // };
-
   const sendVideoInteractionData = async (
     interactionType: string,
     videoId: string,
   ) => {
-    // if (!userId) {
-    //   router.push("/login");
-    //   return;
-    // }
-
     try {
       await sendInteractionData(interactionType, userId, videoId, 0, false);
     } catch (error) {
@@ -164,10 +151,39 @@ export default function VideoScreen({
             </TouchableOpacity>
           </View>
         )}
+        {!isLoading && showControls && (
+          <View style={styles.sliderContainer}>
+            <View style={[styles.timeContainer, styles.icon]}>
+              <Text style={styles.timeText}>
+                {formatTime(currentTime)} / {formatTime(videoDuration / 1000)}
+              </Text>
+            </View>
+            <Slider
+              value={currentTime}
+              onValueChange={(value) => {
+                setCurrentTime(value);
+                player.currentTime = value;
+              }}
+              maximumValue={videoDuration / 1000}
+              minimumValue={0}
+              minimumTrackTintColor="#FFFFFF"
+              maximumTrackTintColor="#000000"
+              thumbTintColor={Colors.red.brand}
+              thumbStyle={{ height: 10, width: 10 }}
+              trackStyle={{ height: 5 }}
+            />
+          </View>
+        )}
       </View>
     </TouchableWithoutFeedback>
   );
 }
+
+const formatTime = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
+};
 
 const styles = StyleSheet.create({
   contentContainer: {
@@ -197,5 +213,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 4,
     elevation: 5,
+  },
+  sliderContainer: {
+    position: "absolute",
+    bottom: 2,
+    left: 0,
+    right: 0,
+    width: "100%",
+    paddingHorizontal: 20,
+  },
+  timeContainer: {
+    alignItems: "flex-end",
+    marginTop: 5,
+  },
+  timeText: {
+    color: "#FFFFFF",
   },
 });

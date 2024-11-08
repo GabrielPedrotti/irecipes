@@ -129,7 +129,7 @@ export default function UserProfile() {
         <View
           style={{
             position: "absolute",
-            top: 115,
+            top: 85,
             left: 10,
             borderRadius: 10,
             padding: 5,
@@ -139,7 +139,7 @@ export default function UserProfile() {
             style={{
               color: "white",
               fontWeight: 900,
-              fontSize: 18,
+              fontSize: 16,
             }}
           >
             {item.title}

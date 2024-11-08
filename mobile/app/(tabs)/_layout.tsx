@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import { Image, StyleSheet } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs, useRouter } from "expo-router";
 import { Colors } from "../../constants/Colors";
@@ -58,7 +59,7 @@ export default function RootLayout() {
           },
         })}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="aiChat"
         options={{
           headerShown: false,
@@ -84,7 +85,7 @@ export default function RootLayout() {
             }
           },
         })}
-      />
+      /> */}
       <Tabs.Screen
         name="userProfile"
         options={{
@@ -96,9 +97,17 @@ export default function RootLayout() {
           //   },
           // },
           title: "User Profile",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="user-circle" color={color} />
-          ),
+          tabBarIcon: ({ color }) =>
+            !isUserLogged ? (
+              <FontAwesome size={28} name="user-circle" color={color} />
+            ) : (
+              <Image
+                source={{
+                  uri: user?.profileImage || "https://via.placeholder.com/100",
+                }}
+                style={styles.profileImage}
+              />
+            ),
         }}
         listeners={() => ({
           tabPress: (e) => {
@@ -115,3 +124,13 @@ export default function RootLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  profileImage: {
+    width: 28,
+    height: 28,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: Colors.red.brand,
+  },
+});

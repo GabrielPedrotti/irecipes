@@ -1,89 +1,198 @@
-// edit profile page, edit userName and profile image
-
-import React, { useEffect, useState } from "react";
+/* eslint-disable import/no-unresolved */
+import React, { useState } from "react";
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
-  TextInput,
-  Alert,
+  Keyboard,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
 } from "react-native";
+import { useForm, Controller, Resolver } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "@/context/AuthContext";
 import { updateProfile } from "@/service/user";
-import { Colors } from "@/constants/Colors";
+import { useRouter } from "expo-router";
 import { User } from "@/types/User";
+import { useToast } from "native-base";
+import TextInput from "@/components/FormComponents/TextInput";
+import Button from "@/components/FormComponents/Button";
+
+const formSchema = yup.object().shape({
+  userName: yup
+    .string()
+    .required("Nome de usuário é obrigatório")
+    .min(3, "Nome de usuário deve ter no mínimo 3 caracteres")
+    .max(20, "Nome de usuário deve ter no máximo 20 caracteres")
+    .matches(
+      /^[a-zA-Z0-9_]*$/,
+      "Nome de usuário não pode conter caracteres especiais",
+    ),
+  name: yup
+    .string()
+    .required("Nome é obrigatório")
+    .min(3, "Nome deve ter no mínimo 3 caracteres")
+    .max(50, "Nome deve ter no máximo 50 caracteres"),
+});
+
+type FormData = {
+  userName: string;
+  name: string;
+};
 
 export default function EditProfile() {
   const { user, setUserLogin } = React.useContext(AuthContext);
-  const navigation = useNavigation();
-  const [userName, setUserName] = useState(user?.name);
-  const [profileImage, setProfileImage] = useState(user?.profileImage);
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: yupResolver(formSchema) as unknown as Resolver<FormData>,
+    defaultValues: {
+      userName: user?.userName,
+      name: user?.name,
+    },
+  });
+
+  const toast = useToast();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleUpdateProfile = async () => {
+  const onSubmit = async (data: FormData) => {
+    Keyboard.dismiss();
     setIsLoading(true);
     try {
       if (user) {
         const updatedUser = await updateProfile(user._id, {
-          name: userName,
-          profileImage,
+          name: data.name,
+          userName: data.userName,
         } as User);
-        setUserLogin(updatedUser);
-        navigation.goBack();
+        console.log("updatedUser", updatedUser);
+        await setUserLogin(updatedUser?.user);
+        toast.show({
+          title: "Profile updated successfully!",
+          style: { backgroundColor: "green" },
+          avoidKeyboard: true,
+        });
+        router.back();
       }
-    } catch (error) {
-      Alert.alert(
-        "Erro ao atualizar perfil",
-        "Erro ao atualizar perfil, tente novamente",
-      );
+    } catch (error: any) {
+      console.warn(`Failed to update user: ${error}`);
+      toast.show({
+        title: "Failed to update user!",
+        style: { backgroundColor: "red" },
+        avoidKeyboard: true,
+      });
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.background }}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          padding: 20,
-        }}
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollView}
+        keyboardShouldPersistTaps="handled"
       >
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.text} />
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons
+            name="arrow-back"
+            size={36}
+            color="black"
+            style={styles.icon}
+          />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleUpdateProfile}>
-          <Text style={{ color: Colors.primary, fontSize: 16 }}>Salvar</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={{ alignItems: "center", justifyContent: "center" }}>
-        <Image
-          source={{ uri: profileImage }}
-          style={{ width: 100, height: 100, borderRadius: 50 }}
-        />
-        <TouchableOpacity>
-          <Text style={{ color: Colors.primary, fontSize: 16 }}>
-            Alterar foto
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <View style={{ padding: 20 }}>
-        <Text style={{ color: Colors.text, fontSize: 16 }}>Nome</Text>
-        <TextInput
-          style={{
-            borderBottomWidth: 1,
-            borderBottomColor: Colors.text,
-            color: Colors.text,
-            fontSize: 16,
-          }}
-          value={userName}
-          onChangeText={setUserName}
-        />
-      </View>
-    </View>
+        <View style={styles.form}>
+          <Text style={styles.profileHeader}>Editar Perfil</Text>
+          <Controller
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                {...field}
+                title="Nome de Usuário"
+                style={styles.input}
+                placeholder="Nome de Usuário"
+                required={true}
+                error={errors.userName?.message}
+                onChangeText={(text) => setValue("userName", text)}
+              />
+            )}
+            name="userName"
+          />
+
+          <Controller
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                {...field}
+                title="Nome"
+                style={styles.input}
+                placeholder="Nome"
+                required={true}
+                error={errors.name?.message}
+                onChangeText={(text) => setValue("name", text)}
+              />
+            )}
+            name="name"
+          />
+
+          <Button
+            style={{ marginLeft: 0 }}
+            title="Salvar"
+            onClick={handleSubmit(onSubmit)}
+            disabled={isLoading}
+            isLoading={isLoading}
+          />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+    margin: 10,
+    marginTop: 20,
+  },
+  form: {
+    height: "70%",
+    // bottom: 0,
+    // backgroundColor: "red",
+  },
+  profileHeader: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 50,
+  },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 20,
+    zIndex: 1000,
+  },
+  icon: {
+    elevation: 5,
+  },
+  input: {
+    height: 40,
+    borderColor: "gray",
+    borderWidth: 1,
+    width: 250,
+    padding: 8,
+    marginBottom: 2,
+  },
+  scrollView: {
+    padding: 16,
+    alignContent: "center",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100%",
+  },
+});

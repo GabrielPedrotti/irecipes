@@ -100,7 +100,7 @@ export default function UserProfile() {
         <View
           style={{
             position: "absolute",
-            top: 115,
+            top: 85,
             left: 10,
             borderRadius: 10,
             padding: 5,
@@ -110,7 +110,7 @@ export default function UserProfile() {
             style={{
               color: "white",
               fontWeight: 900,
-              fontSize: 18,
+              fontSize: 16,
             }}
           >
             {item.title}
@@ -175,17 +175,13 @@ export default function UserProfile() {
           style={styles.uploadProfileImage}
         >
           {loadingPhoto ? (
-            <ActivityIndicator
-              style={{ position: "absolute", top: 100, right: 85, zIndex: 1 }}
-              size="small"
-              color="black"
-            />
+            <ActivityIndicator style={styles.icon} size="small" color="white" />
           ) : (
             <Ionicons
               name="camera"
               size={24}
-              color="black"
-              style={{ position: "absolute", top: 100, right: 85, zIndex: 1 }}
+              color="white"
+              style={styles.icon}
             />
           )}
 
@@ -214,11 +210,10 @@ export default function UserProfile() {
         <View style={styles.optionsSection}>
           <Button
             style={styles.editProfileButton}
-            title="Edit Profile"
+            title="Editar Perfil"
             color={"primary"}
             onClick={() => {
-              logout();
-              router.push("/");
+              router.push("/EditProfile/editProfile");
             }}
           />
 
@@ -263,7 +258,7 @@ export default function UserProfile() {
         <ActivityIndicator
           style={{ marginTop: 24 }}
           size="large"
-          color="#0000ff"
+          color="black"
         />
       ) : !isLoading && videos.length > 0 ? (
         <FlatList
@@ -311,9 +306,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   followInfo: {
-    flexDirection: "row", // Mostra os seguidores e seguindo lado a lado
+    flexDirection: "row",
     justifyContent: "space-around",
-    width: "60%", // Ajusta o tamanho da seção de seguidores
+    width: "60%",
     marginTop: 8,
     marginBottom: 16,
   },
@@ -384,5 +379,16 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     width: "80%",
     alignItems: "center",
+  },
+  icon: {
+    position: "absolute",
+    top: 100,
+    right: 85,
+    zIndex: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });
