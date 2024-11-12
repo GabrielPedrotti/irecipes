@@ -39,18 +39,22 @@ export default function Index() {
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation();
   const router = useRouter();
-  const { user, setUserLogin } = useContext(AuthContext);
+  const {
+    user,
+    setUserLogin,
+    isLoading: isLoadingUser,
+  } = useContext(AuthContext);
   const isUserLoggedIn = !!user;
   const MAX_LENGTH = 100;
 
   useEffect(() => {
-    if (user?._id) {
+    if (user?._id && !isLoadingUser) {
       setUserLogin(user);
       resetVideos();
-    } else if (!isUserLoggedIn) {
+    } else if (!isUserLoggedIn && !isLoadingUser) {
       resetVideos();
     }
-  }, [user?._id]);
+  }, [user?._id, isLoadingUser]);
 
   useEffect(() => {
     setIsExpanded(false);
@@ -68,6 +72,7 @@ export default function Index() {
   // }, [navigation, user?._id]);
 
   const resetVideos = async () => {
+    console.log("resetVideos");
     setPage(1);
     setVideos([]);
     setHasMoreVideos(true);
@@ -86,6 +91,8 @@ export default function Index() {
         setHasMoreVideos(false);
         return;
       }
+
+      console.log("newVideos", newVideos);
 
       const uniqueVideos = newVideos.filter(
         (newVideo) =>
@@ -120,7 +127,7 @@ export default function Index() {
     }
 
     try {
-      await sendInteractionData(interactionType, user?._id, videoId, 0, false);
+      await sendInteractionData(interactionType, user?._id, videoId);
     } catch (error) {
       console.error("Erro ao registrar a interação", error);
     }
@@ -265,7 +272,9 @@ export default function Index() {
                   onPress={() => {
                     liked = !liked;
                     likeVideo(item);
-                    sendVideoInteractionData("like", item._id);
+                    if (liked) {
+                      sendVideoInteractionData("like", item._id);
+                    }
                   }}
                   style={styles.buttons}
                 >

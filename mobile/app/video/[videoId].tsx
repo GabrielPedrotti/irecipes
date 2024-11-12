@@ -69,20 +69,12 @@ export default function VideoPage() {
     videoId: string,
   ) => {
     try {
-      if (user?._id) {
-        await sendInteractionData(
-          interactionType,
-          user?._id,
-          videoId,
-          0,
-          false,
-        );
-      }
+      if (!user?._id) return;
+      await sendInteractionData(interactionType, user?._id, videoId);
     } catch (error) {
       console.error("Erro ao registrar a interação", error);
     }
   };
-
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
   };
@@ -169,7 +161,9 @@ export default function VideoPage() {
                 onPress={() => {
                   setLiked(!liked);
                   likeVideo(video);
-                  sendVideoInteractionData("like", video._id);
+                  if (liked) {
+                    sendVideoInteractionData("like", video._id);
+                  }
                 }}
                 style={styles.buttons}
               >

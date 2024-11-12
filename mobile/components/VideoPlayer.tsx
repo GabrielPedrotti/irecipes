@@ -1,5 +1,5 @@
 import { useVideoPlayer, VideoView } from "expo-video";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useContext } from "react";
 import {
   StyleSheet,
   View,
@@ -10,10 +10,11 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { Slider } from "react-native-elements"; // Importação do Slider
+import { Slider } from "react-native-elements";
 import { sendInteractionData } from "@/service/videoInteraction";
 import { IVideo } from "@/types/Video";
 import { Colors } from "@/constants/Colors";
+import { AuthContext } from "@/context/AuthContext";
 
 interface VideoProps {
   source: string;
@@ -30,9 +31,9 @@ export default function VideoScreen({
   userId,
   videoData,
 }: VideoProps) {
+  const { user } = useContext(AuthContext);
   const ref = useRef(null);
   const [showControls, setShowControls] = useState(false);
-  console.log("videoData", videoData);
   const [videoDuration, setVideoDuration] = useState(videoData?.duration);
   const [currentTime, setCurrentTime] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -106,13 +107,36 @@ export default function VideoScreen({
   const sendVideoInteractionData = async (
     interactionType: string,
     videoId: string,
+    watchedComplete?: boolean,
   ) => {
     try {
-      await sendInteractionData(interactionType, userId, videoId, 0, false);
+      if (user) {
+        await sendInteractionData(
+          "",
+          user._id,
+          videoId,
+          currentTime,
+          watchedComplete,
+        );
+      }
     } catch (error) {
       console.error("Erro ao registrar a interação", error);
     }
   };
+
+  useEffect(() => {
+    if (currentTime > 0 && currentTime === videoDuration / 1000) {
+      console.log("video watched");
+      sendVideoInteractionData("watched", videoId, true);
+    }
+  }, [currentTime, videoDuration]);
+
+  useEffect(() => {
+    if (!isVideoPlaying && currentTime > 0) {
+      console.log("video time", currentTime);
+      sendVideoInteractionData("watched", videoId, false);
+    }
+  }, [isVideoPlaying]);
 
   return (
     <TouchableWithoutFeedback onPress={() => setShowControls(!showControls)}>

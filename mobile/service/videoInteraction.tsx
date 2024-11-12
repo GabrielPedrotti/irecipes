@@ -4,22 +4,27 @@ export const sendInteractionData = async (
   interactionType: string,
   userId: string,
   videoId: string,
-  watchedTime: number,
-  watchedComplete: boolean,
+  watchedTime?: number,
+  watchedComplete?: boolean,
 ) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any = {
+    userId,
+    videoId,
+  };
+
+  if (watchedTime !== undefined) data.watchedTime = watchedTime;
+  if (watchedComplete !== undefined) data.watchedComplete = watchedComplete;
+
+  if (interactionType === "like") data.liked = true;
+  if (interactionType === "comment") data.commented = true;
+  if (interactionType === "share") data.shared = true;
+
   try {
     await api({
       method: "POST",
       url: "interactions/videoInteraction",
-      data: {
-        userId: userId,
-        videoId: videoId,
-        watchedTime: 0,
-        liked: interactionType === "like",
-        commented: interactionType === "comment",
-        shared: interactionType === "share",
-        watchedComplete: false,
-      },
+      data,
     });
   } catch (error) {
     console.error("Erro ao registrar a interação", error);

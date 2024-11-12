@@ -32,8 +32,6 @@ export const getVideos = async (page: number, userId: string) => {
       throw new Error("Erro ao buscar vídeos");
     }
 
-    console.log("Response videos:", response.data);
-
     return response.data as IVideo[];
   } catch (error) {
     console.log("Erro ao buscar vídeos:", JSON.stringify(error));

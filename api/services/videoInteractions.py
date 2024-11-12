@@ -13,35 +13,61 @@ def log_video_interaction():
     data = request.json
     user_id = data.get('userId')
     video_id = data.get('videoId')
-    watched_time = data.get('watchedTime')
-    liked = data.get('liked', False)
-    commented = data.get('commented', False)
-    shared = data.get('shared', False)
-    watched_complete = data.get('watchedComplete', False)
 
-    interaction = {
-        "userId": user_id,
-        "videoId": video_id,
-        "watchedTime": watched_time,
-        "liked": liked,
-        "commented": commented,
-        "shared": shared,
-        "watchedComplete": watched_complete,
-        "timestamp": datetime.now()
-    }
+    if not user_id or not video_id:
+        return jsonify({"error": "userId and videoId are required"}), 400
+
+    update_fields = {}
+    if 'watchedTime' in data:
+        update_fields['watchedTime'] = data['watchedTime']
+    if 'liked' in data:
+        update_fields['liked'] = data['liked']
+    if 'commented' in data:
+        update_fields['commented'] = data['commented']
+    if 'shared' in data:
+        update_fields['shared'] = data['shared']
+    if 'watchedComplete' in data:
+        update_fields['watchedComplete'] = data['watchedComplete']
+    update_fields['timestamp'] = datetime.now()
 
     try:
-      existing_interaction = get_db().videoInteractions.find_one({"userId": user_id, "videoId": video_id})
-      if existing_interaction:
-          
-          get_db().videoInteractions.update_one(
-              {"userId": user_id, "videoId": video_id},
-              {"$set": interaction}
-          )
-          return jsonify({"message": "Interaction updated successfully"})
-      
-      get_db().videoInteractions.insert_one(interaction)
-      return jsonify({"message": "Interaction logged successfully"})
+        existing_interaction = get_db().videoInteractions.find_one({"userId": user_id, "videoId": video_id})
+        if existing_interaction:
+
+            if 'watchedTime' in update_fields:
+                existing_watched_time = existing_interaction.get('watchedTime', 0)
+                if update_fields['watchedTime'] > existing_watched_time:
+                    pass
+                else:
+
+                    update_fields.pop('watchedTime', None)
+
+            if existing_interaction.get('watchedComplete', False):
+                if 'watchedComplete' in update_fields and update_fields['watchedComplete'] == False:
+                    update_fields.pop('watchedComplete', None)
+            else:
+                pass
+
+            if update_fields:
+                update_fields['timestamp'] = datetime.now()
+                get_db().videoInteractions.update_one(
+                    {"userId": user_id, "videoId": video_id},
+                    {"$set": update_fields}
+                )
+            return jsonify({"message": "Interaction updated successfully"})
+        else:
+            interaction = {
+                "userId": user_id,
+                "videoId": video_id,
+                "watchedTime": data.get('watchedTime', 0),
+                "liked": data.get('liked', False),
+                "commented": data.get('commented', False),
+                "shared": data.get('shared', False),
+                "watchedComplete": data.get('watchedComplete', False),
+                "timestamp": datetime.now()
+            }
+            get_db().videoInteractions.insert_one(interaction)
+            return jsonify({"message": "Interaction logged successfully"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -68,6 +94,9 @@ def recommended_videos():
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 20))
 
+    print("user_id -------------->", user_id)
+
+    # Verificação do vídeo postado
     posted_video = None
     if posted_video_id:
         posted_video = get_db().videos.find_one({"_id": ObjectId(posted_video_id)})
@@ -80,9 +109,19 @@ def recommended_videos():
                     "username": posted_video_user.get('username'),
                     "profileImage": posted_video_user.get('profileImage')
                 }
-    
+
+    # Se não houver user_id, retorna vídeos aleatórios
     if not user_id:
         videos, total_num_videos = get_videos({}, page, limit)
+        for videos in videos:
+            user_data = get_db().users.find_one({"_id": ObjectId(videos.get('user_id'))})
+            if user_data:
+                videos['user'] = {
+                    "userId": str(user_data['_id']),
+                    "name": user_data.get('name'),
+                    "username": user_data.get('username'),
+                    "profileImage": user_data.get('profileImage')
+                }
         videos_list = [posted_video] + videos if posted_video else videos
         return jsonify(videos_list), 200
 
@@ -92,76 +131,103 @@ def recommended_videos():
 
     tastes = user.get('tastes', [])
     user_interactions = list(get_db().videoInteractions.find({"userId": user_id}))
-    interacted_videos = [interaction['videoId'] for interaction in user_interactions]
+    interactions_by_video_id = {interaction['videoId']: interaction for interaction in user_interactions}
 
-    if not user_interactions:
-        interacted_videos = []
+    print("user_interactions --------------->", user_interactions)
 
-    weights = {
-        'watchedComplete': 5,
-        'liked': 3,
-        'commented': 4,
-        'shared': 6,
-        'watchedTime': 0.1
-    }
+    # Obter vídeos que o usuário já assistiu mais da metade
+    interacted_video_ids = [ObjectId(interaction['videoId']) for interaction in user_interactions]
+    interacted_videos = list(get_db().videos.find({"_id": {"$in": interacted_video_ids}}))
 
-    taste_weights = {taste: 0 for taste in tastes}
+    videos_watched_more_than_half = []
+    for video in interacted_videos:
+        video_id_str = str(video['_id'])
+        interaction = interactions_by_video_id.get(video_id_str)
+        if interaction:
+            watched_time = interaction.get('watchedTime', 0) * 1000
+            duration = video.get('duration', 0)
+            if duration > 0 and watched_time >= (0.5 * duration):
+                videos_watched_more_than_half.append(video['_id'])
 
-    if user_interactions:
-        video_ids = [ObjectId(interaction['videoId']) for interaction in user_interactions]
-        videos = list(get_db().videos.find({"_id": {"$in": video_ids}}))
+    # Obter vídeos completamente assistidos para extrair as tags
+    watched_complete_interactions = get_db().videoInteractions.find({
+        "userId": user_id,
+        "watchedComplete": True
+    })
+    watched_complete_video_ids = [ObjectId(interaction['videoId']) for interaction in watched_complete_interactions]
 
-        for interaction, video in zip(user_interactions, videos):
-            video_tastes = video.get('tags', [])
-            relevance_score = (
-                interaction.get('watchedComplete', 0) * weights['watchedComplete'] +
-                interaction.get('liked', 0) * weights['liked'] +
-                interaction.get('commented', 0) * weights['commented'] +
-                interaction.get('shared', 0) * weights['shared'] +
-                interaction.get('watchedTime', 0) * weights['watchedTime']
-            )
-            for taste in video_tastes:
-                if taste in taste_weights:
-                    taste_weights[taste] += relevance_score
-                else:
-                    taste_weights[taste] = relevance_score
+    watched_complete_videos = list(get_db().videos.find({
+        "_id": {"$in": watched_complete_video_ids}
+    }))
 
-    sorted_tastes = sorted(taste_weights.items(), key=lambda x: x[1], reverse=True)
-    sorted_tastes = [taste for taste, _ in sorted_tastes]
+    tags_from_watched_videos = []
+    for video in watched_complete_videos:
+        tags_from_watched_videos.extend(video.get('tags', []))
 
-    if not sorted_tastes:
-        sorted_tastes = tastes
+    # Contar a frequência de cada tag
+    from collections import Counter
+    tag_counts = Counter(tags_from_watched_videos)
+
+    # Se não houver tags dos vídeos completamente assistidos, usar os tastes do usuário
+    if not tag_counts:
+        tag_counts = Counter(tastes)
+
+    # Ordenar as tags pela frequência
+    sorted_tags = [tag for tag, _ in tag_counts.most_common()]
+
+    # Excluir vídeos já assistidos mais da metade
+    excluded_video_ids = [ObjectId(video_id) for video_id in videos_watched_more_than_half]
 
     skip = (page - 1) * limit
 
     try:
-        recommended_videos_cursor = get_db().videos.aggregate([
+        # Montar o pipeline de agregação
+        pipeline = [
             {
                 "$match": {
-                    "tags": {"$in": sorted_tastes},
-                    "id": {"$nin": interacted_videos}
+                    "tags": {"$in": sorted_tags},
+                    "_id": {"$nin": excluded_video_ids}
                 }
             },
             {
                 "$addFields": {
-                    "engagementScore": {"$sum": ["$likes", "$views"]}
+                    "tagScore": {
+                        "$size": {
+                            "$setIntersection": ["$tags", sorted_tags]
+                        }
+                    }
                 }
             },
-            {"$sort": {"engagementScore": -1, "createdAt": -1}},
+            {
+                "$sort": {
+                    "tagScore": -1,
+                    "engagementScore": -1,
+                    "createdAt": -1
+                }
+            },
             {"$skip": skip},
             {"$limit": limit}
-        ])
+        ]
+
+        # Adicionar o cálculo de engagementScore se necessário
+        # Caso não esteja calculado no banco de dados
+        pipeline.insert(1, {
+            "$addFields": {
+                "engagementScore": {"$sum": ["$likes", "$views"]}
+            }
+        })
+
+        recommended_videos_cursor = get_db().videos.aggregate(pipeline)
 
         recommended_videos = list(recommended_videos_cursor)
 
         for video in recommended_videos:
-            print('video', video)
             user_data = get_db().users.find_one({"_id": ObjectId(video.get('user_id'))})
             if user_data:
                 video['user'] = {
                     "userId": str(user_data['_id']),
                     "name": user_data.get('name'),
-                    "userName": user_data.get('userName'),
+                    "username": user_data.get('username'),
                     "profileImage": user_data.get('profileImage')
                 }
 
@@ -169,7 +235,7 @@ def recommended_videos():
             recommended_videos.insert(0, posted_video)
 
         return jsonify(recommended_videos), 200
-    except pymongo.errors.PyMongoError as e:
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
    
