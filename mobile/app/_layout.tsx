@@ -13,7 +13,7 @@ export default function Layout() {
             options={{
               headerShown: true,
               title: "Login",
-              headerBackTitleVisible: false,
+              headerBackVisible: false,
             }}
           />
           <Stack.Screen
@@ -21,7 +21,7 @@ export default function Layout() {
             options={{
               headerShown: true,
               title: "Cadastro",
-              headerBackTitleVisible: false,
+              headerBackVisible: false,
             }}
           />
           <Stack.Screen
@@ -29,7 +29,7 @@ export default function Layout() {
             options={{
               headerShown: false,
               title: "Selecione seus interesses",
-              headerBackTitleVisible: false,
+              headerBackVisible: false,
             }}
           />
           <Stack.Screen
@@ -37,7 +37,7 @@ export default function Layout() {
             options={{
               headerShown: false,
               title: "Vídeo",
-              headerBackTitleVisible: false,
+              headerBackVisible: false,
             }}
           />
           <Stack.Screen
@@ -45,7 +45,7 @@ export default function Layout() {
             options={{
               headerShown: false,
               title: "Vídeo",
-              headerBackTitleVisible: false,
+              headerBackVisible: false,
             }}
           />
           <Stack.Screen
@@ -53,7 +53,7 @@ export default function Layout() {
             options={{
               headerShown: false,
               title: "Vídeo",
-              headerBackTitleVisible: false,
+              headerBackVisible: false,
             }}
           />
         </Stack>

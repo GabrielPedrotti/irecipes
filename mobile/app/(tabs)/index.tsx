@@ -60,16 +60,26 @@ export default function Index() {
     setIsExpanded(false);
   }, [currentIndex]);
 
-  // useEffect(() => {
-  //   console.log("unsubscribasdasdasdase", user);
-  //   const unsubscribe = navigation.addListener("focus", () => {
-  //     if (user?._id) {
-  //       resetVideos();
-  //     }
-  //   });
+  useEffect(() => {
+    const onScreenFocus = () => {
+      const state = navigation.getState();
+      const routes = state ? state.routes : [];
 
-  //   return unsubscribe;
-  // }, [navigation, user?._id]);
+      if (routes.length > 1) {
+        const lastRoute = routes[routes.length - 2];
+
+        if (lastRoute.name === "createPost") {
+          resetVideos();
+        }
+      }
+    };
+
+    navigation.addListener("focus", onScreenFocus);
+
+    return () => {
+      navigation.removeListener("focus", onScreenFocus);
+    };
+  }, [navigation]);
 
   const resetVideos = async () => {
     console.log("resetVideos");
@@ -89,6 +99,12 @@ export default function Index() {
 
       if (newVideos.length === 0) {
         setHasMoreVideos(false);
+        return;
+      }
+
+      // console.log("newVideos", newVideos);
+      // verify if newVideos is array
+      if (!Array.isArray(newVideos)) {
         return;
       }
 

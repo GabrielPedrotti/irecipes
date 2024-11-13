@@ -90,13 +90,24 @@ def updateVideoInteraction():
 @videoInteractions.route('/recommended', methods=['GET'])
 def recommended_videos():
     user_id = request.args.get('userId')
-    posted_video_id = request.args.get('postedVideoId')  # Recebe o ID do vídeo postado
+    posted_video_id = request.args.get('postedVideoId')
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 20))
 
-    print("user_id -------------->", user_id)
+    # if no user id is provided, return the most recent videos
+    if not user_id:
+        videos, total_num_videos = get_videos({}, page, limit)
+        videos_list = videos
+        return jsonify(videos_list), 200
 
-    # Verificação do vídeo postado
+
+    print("user_id -------------->", user_id)
+    
+    user = get_db().users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    # verify if the posted video exists
     posted_video = None
     if posted_video_id:
         posted_video = get_db().videos.find_one({"_id": ObjectId(posted_video_id)})
@@ -106,28 +117,9 @@ def recommended_videos():
                 posted_video['user'] = {
                     "userId": str(posted_video_user['_id']),
                     "name": posted_video_user.get('name'),
-                    "username": posted_video_user.get('username'),
+                    "userName": posted_video_user.get('userName'),
                     "profileImage": posted_video_user.get('profileImage')
                 }
-
-    # Se não houver user_id, retorna vídeos aleatórios
-    if not user_id:
-        videos, total_num_videos = get_videos({}, page, limit)
-        for videos in videos:
-            user_data = get_db().users.find_one({"_id": ObjectId(videos.get('user_id'))})
-            if user_data:
-                videos['user'] = {
-                    "userId": str(user_data['_id']),
-                    "name": user_data.get('name'),
-                    "username": user_data.get('username'),
-                    "profileImage": user_data.get('profileImage')
-                }
-        videos_list = [posted_video] + videos if posted_video else videos
-        return jsonify(videos_list), 200
-
-    user = get_db().users.find_one({"_id": ObjectId(user_id)})
-    if not user:
-        return jsonify({"error": "User not found"}), 404
 
     tastes = user.get('tastes', [])
     user_interactions = list(get_db().videoInteractions.find({"userId": user_id}))
@@ -135,7 +127,6 @@ def recommended_videos():
 
     print("user_interactions --------------->", user_interactions)
 
-    # Obter vídeos que o usuário já assistiu mais da metade
     interacted_video_ids = [ObjectId(interaction['videoId']) for interaction in user_interactions]
     interacted_videos = list(get_db().videos.find({"_id": {"$in": interacted_video_ids}}))
 
@@ -149,7 +140,6 @@ def recommended_videos():
             if duration > 0 and watched_time >= (0.5 * duration):
                 videos_watched_more_than_half.append(video['_id'])
 
-    # Obter vídeos completamente assistidos para extrair as tags
     watched_complete_interactions = get_db().videoInteractions.find({
         "userId": user_id,
         "watchedComplete": True
@@ -164,24 +154,18 @@ def recommended_videos():
     for video in watched_complete_videos:
         tags_from_watched_videos.extend(video.get('tags', []))
 
-    # Contar a frequência de cada tag
     from collections import Counter
     tag_counts = Counter(tags_from_watched_videos)
 
-    # Se não houver tags dos vídeos completamente assistidos, usar os tastes do usuário
     if not tag_counts:
         tag_counts = Counter(tastes)
 
-    # Ordenar as tags pela frequência
     sorted_tags = [tag for tag, _ in tag_counts.most_common()]
-
-    # Excluir vídeos já assistidos mais da metade
     excluded_video_ids = [ObjectId(video_id) for video_id in videos_watched_more_than_half]
 
     skip = (page - 1) * limit
 
     try:
-        # Montar o pipeline de agregação
         pipeline = [
             {
                 "$match": {
@@ -209,8 +193,6 @@ def recommended_videos():
             {"$limit": limit}
         ]
 
-        # Adicionar o cálculo de engagementScore se necessário
-        # Caso não esteja calculado no banco de dados
         pipeline.insert(1, {
             "$addFields": {
                 "engagementScore": {"$sum": ["$likes", "$views"]}
@@ -227,7 +209,7 @@ def recommended_videos():
                 video['user'] = {
                     "userId": str(user_data['_id']),
                     "name": user_data.get('name'),
-                    "username": user_data.get('username'),
+                    "userName": user_data.get('userName'),
                     "profileImage": user_data.get('profileImage')
                 }
 

@@ -73,16 +73,16 @@ export default function VideoScreen({
 
   useEffect(() => {
     const subscription = player.addListener("playingChange", (isPlaying) => {
-      setIsVideoPlaying(isPlaying);
+      setIsVideoPlaying(isPlaying.isPlaying);
     });
 
     const statusSubscription = player.addListener(
       "statusChange",
       (newStatus) => {
-        setIsLoading(newStatus === "loading");
-        if (newStatus === "ready") {
-          setVideoDuration(player.duration);
-        }
+        setIsLoading(newStatus.status === "loading");
+        // if (newStatus.status === "readyToPlay") {
+        //   setVideoDuration(player.duration);
+        // }
       },
     );
 
@@ -133,7 +133,6 @@ export default function VideoScreen({
 
   useEffect(() => {
     if (!isVideoPlaying && currentTime > 0) {
-      console.log("video time", currentTime);
       sendVideoInteractionData("watched", videoId, false);
     }
   }, [isVideoPlaying]);
@@ -179,17 +178,20 @@ export default function VideoScreen({
           <View style={styles.sliderContainer}>
             <View style={[styles.timeContainer, styles.icon]}>
               <Text style={styles.timeText}>
-                {formatTime(currentTime)} / {formatTime(videoDuration / 1000)}
+                {formatTime(currentTime)} /{" "}
+                {formatTime(Math.round(videoDuration / 1000))}
               </Text>
             </View>
             <Slider
-              value={currentTime}
+              value={Math.round(currentTime * 1000)}
               onValueChange={(value) => {
-                setCurrentTime(value);
-                player.currentTime = value;
+                const timeInSeconds = Math.round(value / 1000);
+                setCurrentTime(timeInSeconds);
+                player.currentTime = timeInSeconds;
               }}
-              maximumValue={videoDuration / 1000}
+              maximumValue={Math.round(videoDuration)}
               minimumValue={0}
+              step={100}
               minimumTrackTintColor="#FFFFFF"
               maximumTrackTintColor="#000000"
               thumbTintColor={Colors.red.brand}

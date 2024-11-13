@@ -354,8 +354,7 @@ export default function CreatePost() {
               message="Receita postada com sucesso!"
               onClose={() => {
                 setShowSuccessModal(false);
-                // TODO create logic to push to user profile with the new post
-                router.push("/");
+                router.push("/(tabs)/userProfile");
               }}
             />
           )}

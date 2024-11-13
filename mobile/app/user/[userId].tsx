@@ -257,7 +257,7 @@ export default function UserProfile() {
           numColumns={2}
           contentContainerStyle={{
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: "flex-start",
           }}
         />
       ) : !isLoading && !isLoadingUser && videos.length === 0 ? (
