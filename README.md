@@ -9,6 +9,7 @@
  * [Trade Offs](#trade-offs)
  * [C4 Model](#c4-model)
  * [Requisitos e Casos de Uso](#requisitos-e-casos-de-uso)
+ * [Modelagem](#modelagem)
 
 
 ## Objetivo
