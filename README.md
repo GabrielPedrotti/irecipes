@@ -68,7 +68,7 @@ Alguns dos problemas a serem abordados pelo projeto são: a falta de tempo para 
 
 ## Restrições
 
- * Tecnologia: O aplicativo será desenvolvido para dispositivos móveis, com foco em smartphones IOS.
+ * Tecnologia: O aplicativo será desenvolvido para dispositivos móveis, com foco em smartphones IOS e Android.
  * Recursos: O projeto terá um orçamento limitado para o desenvolvimento do aplicativo.
 
 ## Trade Offs
@@ -83,7 +83,7 @@ Alguns dos problemas a serem abordados pelo projeto são: a falta de tempo para 
 
  - **Portabilidade x Desempenho:**
 
-  O aplicativo será desenvolvido para dispositivos móveis IOS, o que pode impactar no desempenho do aplicativo.
+  O aplicativo será desenvolvido para dispositivos móveis IOS e Android, o que pode impactar no desempenho do aplicativo.
 
  - **Usabilidade:**
   
@@ -95,7 +95,7 @@ Alguns dos problemas a serem abordados pelo projeto são: a falta de tempo para 
 
 ## C4 Model
 
-O diagrama do sistema com base no C4 Model pode ser encontrado na pasta [`docs`](c4.drawio.png) do repositório.
+O diagrama do sistema com base no C4 Model pode ser encontrado na pasta [`docs`](docs/c4.drawio.png) do repositório.
 
 ## Requisitos e Casos de Uso
 
@@ -120,7 +120,7 @@ O diagrama do sistema com base no C4 Model pode ser encontrado na pasta [`docs`]
 
   - **Casos de Uso:**
 
-  O diagrama de casos de uso pode ser encontrado na pasta [`docs`](use-case.drawio.png) do repositório.
+  O diagrama de casos de uso pode ser encontrado na pasta [`docs`](docs/use-case.drawio.png) do repositório.
 
 ## Modelagem
 

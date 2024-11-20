@@ -140,7 +140,7 @@ def update_user(user_id, update_fields):
         raise RuntimeError(f"An error occurred: {e}")
 
 
-def get_videos(filters, page, videosPerPage):
+def get_videos(page, videosPerPage):
     """
     Returns a cursor to a list of video documents.
 
@@ -153,24 +153,20 @@ def get_videos(filters, page, videosPerPage):
 
     Returns 2 elements in a tuple: (videos, total_num_videos)
     """
-    print('filters', filters)
     print('page', page)
     print('videosPerPage', videosPerPage)
-    query, project = build_query_sort_project(filters)
-    print('query', query)
-    print('project', project)
+
+    # query is used to filter the documents, but now keep all fields
+    query = {}
     
-    if project:
-        cursor = db.videos.find(query, project)
-    else:
-        cursor = db.videos.find(query)
+    cursor = db.videos.find(query)
 
-    total_num_videos = 0
-    if page == 0:
-        total_num_videos = db.videos.count_documents(query)
+    # query is required to count the total number of documents
+    total_num_videos = db.videos.count_documents(query)
 
-    videos = cursor.limit(videosPerPage)
-    video_list = list(videos)
+    skips = (page - 1) * videosPerPage
+    cursor = cursor.skip(skips).limit(videosPerPage)
+    video_list = list(cursor)
 
     for video in video_list:
         user_data = db.users.find_one({"_id": ObjectId(video.get('user_id'))})

@@ -189,9 +189,10 @@ def getVideos():
         page = int(request.args.get('page', 0))
         print('request.args', page)
         videosPerPage = int(request.args.get('videosPerPage', 10))
-        filters = request.args.get('filters', '{}')
-        filters = eval(filters)
-        videos, total_num_videos = get_videos(filters, page, videosPerPage)
+        # TODO: IMPLEMENT FILTERS if needed
+        # filters = request.args.get('filters', '{}')
+        # filters = eval(filters)
+        videos, total_num_videos = get_videos(page, videosPerPage)
         print('videos', videos)
         return jsonify({"videos": videos, "total_num_videos": total_num_videos}), 200
     except Exception as e:

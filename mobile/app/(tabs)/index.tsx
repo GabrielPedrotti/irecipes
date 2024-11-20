@@ -11,6 +11,7 @@ import {
   Image,
   ScrollView,
   Share,
+  Platform,
 } from "react-native";
 import { IVideo } from "@/types/Video";
 import VideoScreen from "@/components/VideoPlayer";
@@ -49,9 +50,11 @@ export default function Index() {
 
   useEffect(() => {
     if (user?._id && !isLoadingUser) {
+      console.log("user------------------->", user);
       setUserLogin(user);
       resetVideos();
     } else if (!isUserLoggedIn && !isLoadingUser) {
+      console.log("!isUserLoggedIn--------------------- ");
       resetVideos();
     }
   }, [user?._id, isLoadingUser]);
@@ -61,25 +64,24 @@ export default function Index() {
   }, [currentIndex]);
 
   useEffect(() => {
-    const onScreenFocus = () => {
-      const state = navigation.getState();
-      const routes = state ? state.routes : [];
-
-      if (routes.length > 1) {
-        const lastRoute = routes[routes.length - 2];
-
-        if (lastRoute.name === "createPost") {
-          resetVideos();
-        }
+    const onFocus = () => {
+      if (user?._id) {
+        resetVideos();
       }
     };
 
-    navigation.addListener("focus", onScreenFocus);
+    // const onBlur = () => {
+    //   console.log("onBlur");
+    // };
+
+    const unsubscribeFocus = navigation.addListener("focus", onFocus);
+    // const unsubscribeBlur = navigation.addListener("blur", onBlur);
 
     return () => {
-      navigation.removeListener("focus", onScreenFocus);
+      unsubscribeFocus();
+      // unsubscribeBlur();
     };
-  }, [navigation]);
+  }, [navigation, user?._id]);
 
   const resetVideos = async () => {
     console.log("resetVideos");
@@ -102,13 +104,9 @@ export default function Index() {
         return;
       }
 
-      // console.log("newVideos", newVideos);
-      // verify if newVideos is array
       if (!Array.isArray(newVideos)) {
         return;
       }
-
-      console.log("newVideos", newVideos);
 
       const uniqueVideos = newVideos.filter(
         (newVideo) =>
@@ -206,7 +204,13 @@ export default function Index() {
           let liked = item.likes?.some((like: string) => like === user?._id);
 
           return (
-            <View style={{ height: height - tabBarHeight }}>
+            <View
+              style={{
+                flex: 1,
+                height:
+                  Platform.OS === "android" ? height : height - tabBarHeight,
+              }}
+            >
               <VideoScreen
                 source={item.url}
                 isPlaying={currentIndex === index}
@@ -412,7 +416,10 @@ const styles = StyleSheet.create({
   },
   videoInfoContainer: {
     position: "absolute",
-    bottom: 40,
+    bottom: Platform.select({
+      ios: 40,
+      android: 60,
+    }),
     zIndex: 1000,
     width: "78%",
     padding: 10,

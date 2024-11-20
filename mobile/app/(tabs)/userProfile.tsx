@@ -101,7 +101,7 @@ export default function UserProfile() {
           style={{
             position: "absolute",
             top: 85,
-            left: 10,
+            left: 2,
             borderRadius: 10,
             padding: 5,
           }}
@@ -110,7 +110,7 @@ export default function UserProfile() {
             style={{
               color: "white",
               fontWeight: 900,
-              fontSize: 16,
+              fontSize: 14,
             }}
           >
             {item.title}
@@ -267,8 +267,13 @@ export default function UserProfile() {
           keyExtractor={(item) => item._id}
           numColumns={2}
           contentContainerStyle={{
+            paddingHorizontal: 8,
+            height: "100%",
+            paddingBottom: 50,
+            flexGrow: 1,
+          }}
+          columnWrapperStyle={{
             justifyContent: "space-between",
-            alignItems: "flex-start",
           }}
         />
       ) : (
@@ -358,7 +363,7 @@ const styles = StyleSheet.create({
   optionsSection: {
     flexDirection: "row",
     justifyContent: "space-around",
-    width: "60%",
+    width: "100%",
     marginTop: 16,
   },
   editProfileButton: {

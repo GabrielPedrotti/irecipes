@@ -33,7 +33,7 @@ export default function VideoScreen({
 }: VideoProps) {
   const { user } = useContext(AuthContext);
   const ref = useRef(null);
-  const [showControls, setShowControls] = useState(false);
+  const [showControls, setShowControls] = useState(true);
   const [videoDuration, setVideoDuration] = useState(videoData?.duration);
   const [currentTime, setCurrentTime] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -138,7 +138,11 @@ export default function VideoScreen({
   }, [isVideoPlaying]);
 
   return (
-    <TouchableWithoutFeedback onPress={() => setShowControls(!showControls)}>
+    <TouchableWithoutFeedback
+      onPress={() => {
+        setShowControls(!showControls);
+      }}
+    >
       <View style={styles.contentContainer}>
         <VideoView
           ref={ref}
