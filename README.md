@@ -125,3 +125,27 @@ O diagrama do sistema com base no C4 Model pode ser encontrado na pasta [`docs`]
 ## Modelagem
 
 O acompanhamento do projeto foi feito utilizando o Trello.
+
+## Como rodar o projeto
+
+### API
+
+Para rodar a API, siga o readme do diretório [`api`](api/README.md).
+
+### Mobile
+
+Para rodar o aplicativo mobile será necessário ter o Expo Go instalado no seu dispositivo móvel, siga o readme do diretório [`mobile`](mobile/README.md).
+
+### Usuários para total acesso a aplicação
+
+   * Email: joao@yopmail.com
+   * Senha: 123Joao
+
+   * Email: bestchef@gmail.com (Tem o maior número de posts)
+   * Senha: 123Best
+
+## Como contribuir?
+
+Para contribuir com este projeto crie uma branch a partir da staging, crie seu PR com a nova feature/fix e espere pela aprovação.
+Após isso o merge poderá ser feito para teste em staging e com isso tendo a possibilidade de ser feito deploy para produção (master).
+
