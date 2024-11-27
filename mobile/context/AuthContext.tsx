@@ -28,8 +28,10 @@ export const AuthProvider = ({ children }: any) => {
   }, []);
 
   const logout = async () => {
+    setIsLoading(true);
     setUser(null);
     await AsyncStorage.removeItem("user");
+    setIsLoading(false);
   };
 
   const setUserLogin = async (userData: any) => {

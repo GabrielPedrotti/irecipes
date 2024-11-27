@@ -60,7 +60,6 @@ interface confirmationData {
 }
 
 export default function SignUpConfirmation() {
-  const navigation = useNavigation();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [tastes, setTastes] = useState<string[]>([]);

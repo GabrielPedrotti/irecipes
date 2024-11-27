@@ -214,7 +214,7 @@ def recommended_videos():
 
     excluded_video_ids.extend([video['_id'] for video in user_videos])
 
-    print("excluded_video_ids --------------->", excluded_video_ids.__len__())
+    print("excluded_video_ids --------------->", len(excluded_video_ids))
 
     skip = (page - 1) * limit
 

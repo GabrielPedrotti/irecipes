@@ -12,4 +12,12 @@ module.exports = {
     "@typescript-eslint/ban-types": "off",
     "@typescript-eslint/ban-ts-comment": "warn",
   },
+  settings: {
+    "import/resolver": {
+      alias: {
+        map: [["@", "./"]],
+        extensions: [".js", ".jsx", ".ts", ".tsx"],
+      },
+    },
+  },
 };

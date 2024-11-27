@@ -110,7 +110,7 @@ export default function CreatePost() {
     Keyboard.dismiss();
 
     try {
-      // Chama a função de upload passando o URI do vídeo
+      // chama a função de upload passando o URI do vídeo
       const title = data.title;
       const description = data.description;
       const tags = data.tags;

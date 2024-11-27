@@ -34,7 +34,7 @@ export default function VideoScreen({
   const { user } = useContext(AuthContext);
   const ref = useRef(null);
   const [showControls, setShowControls] = useState(true);
-  const [videoDuration, setVideoDuration] = useState(videoData?.duration);
+  const [videoDuration] = useState(videoData?.duration);
   const [currentTime, setCurrentTime] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);

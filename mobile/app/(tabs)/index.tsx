@@ -12,6 +12,7 @@ import {
   ScrollView,
   Share,
   Platform,
+  ViewToken,
 } from "react-native";
 import { IVideo } from "@/types/Video";
 import VideoScreen from "@/components/VideoPlayer";
@@ -22,7 +23,6 @@ import { AuthContext } from "@/context/AuthContext";
 import { getVideos } from "@/service/video";
 import { sendInteractionData } from "@/service/videoInteraction";
 import { postLike, deleteLike, getLikes } from "@/service/video";
-import { useNavigation } from "@react-navigation/native";
 import CommentsModal from "@/components/VideoComponents/CommentsModal";
 import { Colors } from "@/constants/Colors";
 
@@ -31,105 +31,97 @@ export default function Index() {
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [videoSelected, setVideoSelected] = useState<IVideo | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMoreVideos, setHasMoreVideos] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // porcentagem de visibilidade do item para começar o vídeo
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 80 });
   const { height } = Dimensions.get("window");
   const tabBarHeight = useBottomTabBarHeight();
-  const navigation = useNavigation();
   const router = useRouter();
   const {
     user,
     setUserLogin,
     isLoading: isLoadingUser,
   } = useContext(AuthContext);
-  const isUserLoggedIn = !!user;
+
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState<boolean | undefined>(
+    undefined,
+  );
   const MAX_LENGTH = 100;
+  const isFetching = useRef(false);
 
   useEffect(() => {
-    if (user?._id && !isLoadingUser) {
-      console.log("user------------------->", user);
-      setUserLogin(user);
-      resetVideos();
-    } else if (!isUserLoggedIn && !isLoadingUser) {
-      console.log("!isUserLoggedIn--------------------- ");
-      resetVideos();
+    if (!isLoadingUser) {
+      setIsUserLoggedIn(!!user);
     }
-  }, [user?._id, isLoadingUser]);
+  }, [isLoadingUser]);
+
+  useEffect(() => {
+    if (user) {
+      setUserLogin(user);
+    }
+    if (isUserLoggedIn !== undefined) resetVideos();
+  }, [isUserLoggedIn]);
 
   useEffect(() => {
     setIsExpanded(false);
   }, [currentIndex]);
 
-  useEffect(() => {
-    const onFocus = () => {
-      if (user?._id) {
-        resetVideos();
-      }
-    };
-
-    // const onBlur = () => {
-    //   console.log("onBlur");
-    // };
-
-    const unsubscribeFocus = navigation.addListener("focus", onFocus);
-    // const unsubscribeBlur = navigation.addListener("blur", onBlur);
-
-    return () => {
-      unsubscribeFocus();
-      // unsubscribeBlur();
-    };
-  }, [navigation, user?._id]);
-
   const resetVideos = async () => {
     console.log("resetVideos");
     setPage(1);
-    setVideos([]);
+    await setVideos([]);
     setHasMoreVideos(true);
-    fetchVideos(1);
+    await fetchVideos(1);
   };
 
   const fetchVideos = async (pageNumber = page) => {
-    if (isLoading || !hasMoreVideos) return;
+    console.log("chamei fetch");
+    if (isFetching.current || !hasMoreVideos) return;
+
+    isFetching.current = true;
     setIsLoading(true);
 
     try {
       const response = await getVideos(pageNumber, user?._id || "");
       const newVideos = response;
 
-      if (newVideos.length === 0) {
+      console.log("newVideos length ------>", newVideos.length);
+      if (!Array.isArray(newVideos) || newVideos.length === 0) {
         setHasMoreVideos(false);
         return;
       }
 
-      if (!Array.isArray(newVideos)) {
-        return;
-      }
+      setVideos((prevVideos) => {
+        const uniqueVideos = newVideos.filter(
+          (newVideo) =>
+            !prevVideos.some((prevVideo) => prevVideo._id === newVideo._id),
+        );
+        return [...prevVideos, ...uniqueVideos];
+      });
 
-      const uniqueVideos = newVideos.filter(
-        (newVideo) =>
-          !videos.some((existingVideo) => existingVideo._id === newVideo._id),
-      );
-
-      setVideos((prevVideos) => [...prevVideos, ...uniqueVideos]);
       setPage(pageNumber + 1);
     } catch (error) {
       console.error("Erro ao carregar vídeos", error);
     } finally {
       setIsLoading(false);
+      isFetching.current = false;
     }
   };
 
-  const handleViewableItemsChanged = useRef(({ viewableItems }) => {
-    if (viewableItems.length > 0) {
-      const index = viewableItems[0].index;
-      if (index !== null && index !== undefined) {
-        setCurrentIndex(index);
+  const handleViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      if (viewableItems && viewableItems.length > 0) {
+        const index = viewableItems[0].index;
+        if (index !== null && index !== undefined) {
+          setCurrentIndex(index);
+        }
       }
-    }
-  }).current;
+    },
+  ).current;
 
   const sendVideoInteractionData = async (
     interactionType: string,
@@ -180,7 +172,7 @@ export default function Index() {
   const shareVideo = async (videoId: string) => {
     try {
       const shareUrl = `https://irecipes.com/videos/${videoId}`;
-      const result = await Share.share({
+      await Share.share({
         message: `Gostei dessa receita, vamos fazer? ${shareUrl}`,
       });
 
@@ -200,7 +192,7 @@ export default function Index() {
     <>
       <FlatList
         data={videos || null}
-        renderItem={({ item, index }: any) => {
+        renderItem={({ item, index }: { item: IVideo; index: number }) => {
           let liked = item.likes?.some((like: string) => like === user?._id);
 
           return (
@@ -346,15 +338,22 @@ export default function Index() {
         showsVerticalScrollIndicator={false}
         onViewableItemsChanged={handleViewableItemsChanged}
         viewabilityConfig={viewabilityConfig.current}
-        onEndReached={() => fetchVideos(page)}
+        onEndReached={() => {
+          if (isUserLoggedIn !== undefined) fetchVideos(page);
+        }}
         onEndReachedThreshold={0.5}
         ListFooterComponent={
           isLoading ? (
-            <ActivityIndicator
-              style={{ marginTop: 100 }}
-              size="large"
-              color="#0000ff"
-            />
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                paddingVertical: 400,
+              }}
+            >
+              <ActivityIndicator size="small" color="black" />
+            </View>
           ) : null
         }
       />

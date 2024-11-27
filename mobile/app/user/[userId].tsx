@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
@@ -20,6 +21,7 @@ import { User } from "@/types/User";
 import { api } from "@/service/api";
 import { followUser, unfollowUser } from "@/service/user";
 import Button from "../../components/FormComponents/Button";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 export default function UserProfile() {
   const { user: authUser } = useContext(AuthContext);
@@ -32,6 +34,7 @@ export default function UserProfile() {
   const [loadingFollow, setLoadingFollow] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const tabBarHeight = useBottomTabBarHeight();
 
   useEffect(() => {
     if (userId) {
@@ -255,9 +258,17 @@ export default function UserProfile() {
           renderItem={renderVideoItem}
           keyExtractor={(item) => item._id}
           numColumns={2}
+          scrollEnabled={true}
+          style={{
+            height: Platform.OS === "android" ? 400 : 500 - tabBarHeight,
+          }}
           contentContainerStyle={{
+            paddingHorizontal: 8,
+            paddingBottom: 50,
+            flexGrow: 1,
+          }}
+          columnWrapperStyle={{
             justifyContent: "space-between",
-            alignItems: "flex-start",
           }}
         />
       ) : !isLoading && !isLoadingUser && videos.length === 0 ? (
