@@ -21,7 +21,6 @@ import { User } from "@/types/User";
 import { api } from "@/service/api";
 import { followUser, unfollowUser } from "@/service/user";
 import Button from "../../components/FormComponents/Button";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 export default function UserProfile() {
   const { user: authUser } = useContext(AuthContext);
@@ -34,7 +33,6 @@ export default function UserProfile() {
   const [loadingFollow, setLoadingFollow] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const tabBarHeight = useBottomTabBarHeight();
 
   useEffect(() => {
     if (userId) {
@@ -260,7 +258,7 @@ export default function UserProfile() {
           numColumns={2}
           scrollEnabled={true}
           style={{
-            height: Platform.OS === "android" ? 400 : 500 - tabBarHeight,
+            height: Platform.OS === "android" ? 400 : 500,
           }}
           contentContainerStyle={{
             paddingHorizontal: 8,

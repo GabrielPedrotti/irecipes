@@ -147,10 +147,13 @@ def recommended_videos():
         if interaction:
             if interaction.get('liked', False):
                 videos_liked.append(video['_id'])
+                videos_watched.append(video['_id'])
             if interaction.get('commented', False):
                 videos_commented.append(video['_id'])
+                videos_watched.append(video['_id'])
             if interaction.get('shared', False):
                 videos_shared.append(video['_id'])
+                videos_watched.append(video['_id'])
             watched_time = interaction.get('watchedTime', 0) * 1000
             duration = video.get('duration', 0)
             if duration > 0 and watched_time >= (0.1 * duration):
@@ -198,7 +201,7 @@ def recommended_videos():
     commented_video_weighted = [tag for tag in tags_from_commented_videos for _ in range(wheight_commented)]
     liked_video_weighted = [tag for tag in tags_from_liked_videos for _ in range(wheight_liked)]
 
-    all_weighted_tags = shared_video_weighted + commented_video_weighted + liked_video_weighted + tags_from_watched_videos
+    all_weighted_tags = shared_video_weighted + commented_video_weighted + liked_video_weighted + tags_from_watched_videos + tastes
 
     tag_counts = Counter(all_weighted_tags)
 
@@ -217,6 +220,8 @@ def recommended_videos():
     print("excluded_video_ids --------------->", len(excluded_video_ids))
 
     skip = (page - 1) * limit
+    
+    print("sorted_tags --------------->", sorted_tags)
 
     try:
         pipeline = [
