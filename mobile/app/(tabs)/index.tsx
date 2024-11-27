@@ -79,7 +79,6 @@ export default function Index() {
   };
 
   const fetchVideos = async (pageNumber = page) => {
-    console.log("chamei fetch");
     if (isFetching.current || !hasMoreVideos) return;
 
     isFetching.current = true;
