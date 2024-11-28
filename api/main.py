@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template
+from flask import Flask, jsonify
 from flask.json.provider import DefaultJSONProvider
 from flask.json import JSONEncoder
 from flask_cors import CORS
@@ -31,13 +31,11 @@ class MongoJsonEncoder(JSONEncoder):
         return json_util.default(obj, json_util.CANONICAL_JSON_OPTIONS)
 
 def create_app():
-    APP_DIR = os.path.abspath(os.path.dirname(__file__))
-    STATIC_FOLDER = os.path.join(APP_DIR, 'build/static')
-    TEMPLATE_FOLDER = os.path.join(APP_DIR, 'build')
-
-    app = Flask(__name__, static_folder=STATIC_FOLDER,
-                template_folder=TEMPLATE_FOLDER)
+    app = Flask(__name__)
     CORS(app)
+    
+    app.config['MONGO_URI'] = os.environ.get('MONGO_URI')
+    
     app.json_encoder = MongoJsonEncoder
     app.register_blueprint(users)
     app.register_blueprint(videos)
@@ -46,12 +44,14 @@ def create_app():
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
     def serve(path):
-        return render_template('index.html')
-    
-     # Print all registered routes
-    with app.app_context():
-        for rule in app.url_map.iter_rules():
-            methods = ','.join(rule.methods)
-            print(f"{rule.endpoint}: {rule} [{methods}]")
+        return jsonify({
+            "message": "iRecipes API",
+            "version": "1.1.0",
+            "endpoints": [
+                "/api/v1/users",
+                "/api/v1/videos",
+                "/api/v1/video-interactions"
+            ]
+        })
 
     return app
