@@ -6,15 +6,25 @@ from google.cloud import storage
 from bson import ObjectId
 import json
 import os
+import base64
 
 videos = Blueprint('videos', 'videos', url_prefix='/api/v1/videos')
 CORS(videos)
 
+# Initialize storage client using credentials from environment variable
 credentials_json = os.environ.get('GOOGLE_CLOUD_CREDENTIALS')
 if credentials_json:
-    credentials_info = json.loads(credentials_json)
-    storage_client = storage.Client.from_service_account_info(credentials_info)
+    try:
+        # Decode base64-encoded credentials
+        decoded_credentials = base64.b64decode(credentials_json).decode('utf-8')
+        credentials_info = json.loads(decoded_credentials)
+        storage_client = storage.Client.from_service_account_info(credentials_info)
+    except Exception as e:
+        print(f"Error initializing storage client: {e}")
+        # Fallback for local development
+        storage_client = storage.Client.from_service_account_json('secret/videoUploader.json')
 else:
+    # Fallback for local development
     storage_client = storage.Client.from_service_account_json('secret/videoUploader.json')
 
 bucket_name = 'irecipes-videos'
