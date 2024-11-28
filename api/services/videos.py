@@ -4,11 +4,19 @@ from datetime import datetime
 from flask_cors import CORS
 from google.cloud import storage
 from bson import ObjectId
+import json
+import os
 
 videos = Blueprint('videos', 'videos', url_prefix='/api/v1/videos')
 CORS(videos)
 
-storage_client = storage.Client.from_service_account_json('secret/videoUploader.json')
+credentials_json = os.environ.get('GOOGLE_CLOUD_CREDENTIALS')
+if credentials_json:
+    credentials_info = json.loads(credentials_json)
+    storage_client = storage.Client.from_service_account_info(credentials_info)
+else:
+    storage_client = storage.Client.from_service_account_json('secret/videoUploader.json')
+
 bucket_name = 'irecipes-videos'
 
 @videos.route('/uploadVideo', methods=['POST'])

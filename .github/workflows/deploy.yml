@@ -43,4 +43,5 @@ jobs:
           --platform managed \
           --region ${{ env.REGION }} \
           --allow-unauthenticated \
-          --set-env-vars="MONGO_URI=${{ secrets.MONGO_URI }}"
+          --set-env-vars="MONGO_URI=${{ secrets.MONGO_URI }}" \
+          --set-env-vars="GOOGLE_CLOUD_CREDENTIALS=${{ secrets.GOOGLE_CLOUD_CREDENTIALS }}"
