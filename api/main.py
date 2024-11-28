@@ -6,6 +6,7 @@ from flask_cors import CORS
 from bson import json_util, ObjectId
 from datetime import datetime, timedelta
 import json
+import configparser
 
 # Import the users Blueprint correctly
 from services.users import users
@@ -34,8 +35,18 @@ def create_app():
     app = Flask(__name__)
     CORS(app)
     
-    app.config['MONGO_URI'] = os.environ.get('MONGO_URI')
+    mongo_uri = os.environ.get('MONGO_URI')
     
+    if not mongo_uri:
+        try:
+            config = configparser.ConfigParser()
+            config.read(os.path.abspath(os.path.join(".ini")))
+            mongo_uri = config['PROD']['DB_URI']
+        except Exception as e:
+            print(f"Error reading .ini file: {e}")
+            raise ValueError("MongoDB URI not found in environment variables or .ini file")
+    
+    app.config['MONGO_URI'] = mongo_uri
     app.json_encoder = MongoJsonEncoder
     app.register_blueprint(users)
     app.register_blueprint(videos)
@@ -46,7 +57,7 @@ def create_app():
     def serve(path):
         return jsonify({
             "message": "iRecipes API",
-            "version": "1.1.3",
+            "version": "1.1.0",
             "endpoints": [
                 "/api/v1/users",
                 "/api/v1/videos",
@@ -55,3 +66,8 @@ def create_app():
         })
 
     return app
+
+if __name__ == "__main__":
+    app = create_app()
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
