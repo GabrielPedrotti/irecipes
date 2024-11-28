@@ -36,12 +36,9 @@ jobs:
         docker build -t gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }} .
         docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
 
-    - name: Create env-vars file
+    - name: Prepare credentials
       run: |
-        cat > env-vars.yaml << EOF
-        MONGO_URI: "${{ secrets.MONGO_URI }}"
-        GOOGLE_CLOUD_CREDENTIALS: "$(echo '${{ secrets.GOOGLE_CLOUD_CREDENTIALS }}' | base64 -w 0)"
-        EOF
+        echo '${{ secrets.GOOGLE_CLOUD_CREDENTIALS }}' | base64 -w 0 > creds.b64
 
     - name: Deploy to Cloud Run
       run: |
@@ -50,4 +47,5 @@ jobs:
           --platform managed \
           --region ${{ env.REGION }} \
           --allow-unauthenticated \
-          --env-vars-file env-vars.yaml
+          --update-env-vars="MONGO_URI=${{ secrets.MONGO_URI }}" \
+          --update-env-vars="GOOGLE_CLOUD_CREDENTIALS=$(cat creds.b64)"
