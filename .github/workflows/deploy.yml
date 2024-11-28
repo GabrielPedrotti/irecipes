@@ -38,8 +38,10 @@ jobs:
 
     - name: Create env-vars file
       run: |
-        echo "MONGO_URI=${{ secrets.MONGO_URI }}" > env-vars.txt
-        echo "GOOGLE_CLOUD_CREDENTIALS=$(echo '${{ secrets.GOOGLE_CLOUD_CREDENTIALS }}' | base64 -w 0)" >> env-vars.txt
+        cat > env-vars.yaml << EOF
+        MONGO_URI: "${{ secrets.MONGO_URI }}"
+        GOOGLE_CLOUD_CREDENTIALS: "$(echo '${{ secrets.GOOGLE_CLOUD_CREDENTIALS }}' | base64 -w 0)"
+        EOF
 
     - name: Deploy to Cloud Run
       run: |
@@ -48,4 +50,4 @@ jobs:
           --platform managed \
           --region ${{ env.REGION }} \
           --allow-unauthenticated \
-          --env-vars-file env-vars.txt
+          --env-vars-file env-vars.yaml
