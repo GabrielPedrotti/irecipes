@@ -15,4 +15,7 @@ ENV FLASK_APP=main.py
 ENV FLASK_ENV=production
 ENV PYTHONUNBUFFERED=1
 
-CMD exec gunicorn --bind :$PORT "main:create_app()" --workers 1 --threads 8 --timeout 0 --log-level debug
+RUN echo '#!/bin/bash\necho "[PROD]\nDB_URI=$MONGO_URI" > .ini\nexec gunicorn --bind :$PORT "main:create_app()" --workers 1 --threads 8 --timeout 0 --log-level debug' > start.sh \
+    && chmod +x start.sh
+
+CMD ["./start.sh"]

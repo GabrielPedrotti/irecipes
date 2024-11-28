@@ -57,7 +57,7 @@ def create_app():
     def serve(path):
         return jsonify({
             "message": "iRecipes API",
-            "version": "1.1.0",
+            "version": "1.1.1",
             "endpoints": [
                 "/api/v1/users",
                 "/api/v1/videos",
