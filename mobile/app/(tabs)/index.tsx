@@ -126,12 +126,8 @@ export default function Index() {
     interactionType: string,
     videoId: string,
   ) => {
-    if (!isUserLoggedIn) {
-      router.push("/login");
-      return;
-    }
-
     try {
+      if (!user?._id) return;
       await sendInteractionData(interactionType, user?._id, videoId);
     } catch (error) {
       console.error("Erro ao registrar a interação", error);
@@ -242,7 +238,7 @@ export default function Index() {
               <View style={styles.actionsContainer}>
                 <TouchableOpacity
                   onPress={() => {
-                    if (!isUserLoggedIn) {
+                    if (!user?._id) {
                       router.push("/login");
                       return;
                     }
@@ -281,6 +277,10 @@ export default function Index() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
+                    if (!user?._id) {
+                      router.push("/login");
+                      return;
+                    }
                     liked = !liked;
                     likeVideo(item);
                     if (liked) {
@@ -299,6 +299,10 @@ export default function Index() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
+                    if (!user?._id) {
+                      router.push("/login");
+                      return;
+                    }
                     setVideoSelected(item);
                     setShowCommentsModal(!showCommentsModal);
                     sendVideoInteractionData("comment", item._id);
@@ -315,6 +319,10 @@ export default function Index() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
+                    if (!user?._id) {
+                      router.push("/login");
+                      return;
+                    }
                     shareVideo(item._id);
                     sendVideoInteractionData("share", item._id);
                   }}

@@ -156,7 +156,7 @@ def recommended_videos():
                 videos_watched.append(video['_id'])
             watched_time = interaction.get('watchedTime', 0) * 1000
             duration = video.get('duration', 0)
-            if duration > 0 and watched_time >= (0.1 * duration):
+            if duration > 0 and watched_time >= (0.05 * duration):
                 videos_watched.append(video['_id'])
 
     watched_complete_interactions = get_db().videoInteractions.find({
