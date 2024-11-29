@@ -10,11 +10,13 @@
  * [C4 Model](#c4-model)
  * [Requisitos e Casos de Uso](#requisitos-e-casos-de-uso)
  * [Modelagem](#modelagem)
+ * [Como rodar o projeto](#como-rodar-o-projeto)
+ * [Como contribuir?](#como-contribuir)
 
 
 ## Objetivo
 
-Este projeto tem como objetivo principal ser uma rede social para postagem de receitas em vídeos curtos e dinâmicos, iRecipes, foca em facilitar o dia a dia das pessoas fornecendo conteúdos de receitas que elas gostam conforme o algoritmo dinâmico. Sendo fácil e prático de utilizar utilizando os mesmos padrões de outras redes sociais.
+Facilitar a vida das pessoas tendo como principal função ser uma rede social para postagem de receitas em vídeos curtos e dinâmicos, iRecipes, foca em facilitar o dia a dia das pessoas fornecendo conteúdos de receitas que elas gostam conforme o algoritmo dinâmico. Sendo fácil e prático de utilizar utilizando os mesmos padrões de outras redes sociais.
 
 ## Escopo
 
@@ -63,7 +65,7 @@ iRecipes tem como objetivo ser uma rede social onde as pessoas compartilham suas
 
 ## Contexto
 
-O projeto iRecipes visa desenvolver uma rede social de culinária adequada à era dos conteúdos dinâmicos, com foco em vídeos curtos. Diante da realidade em que o tempo das pessoas é precioso e a preferência por conteúdos breves é crescente.
+Entende-se que nos dias atuais o conteúdo dinâmico e de fácil acesso está muito em alta, iRecipes visa desenvolver uma rede social de culinária adequada à era dos conteúdos dinâmicos, com foco em vídeos curtos. Diante da realidade em que o tempo das pessoas é precioso e a preferência por conteúdos breves é crescente.
 Alguns dos problemas a serem abordados pelo projeto são: a falta de tempo para consumir conteúdo longo e maçante sobre culinária, a dificuldade em encontrar receitas que se adequem as necessidades do usuário ou às preferências alimentares do mesmo e a falta de interação e compartilhamento de receitas simples e rápidas. 
 
 ## Restrições
@@ -96,6 +98,7 @@ Alguns dos problemas a serem abordados pelo projeto são: a falta de tempo para 
 ## C4 Model
 
 O diagrama do sistema com base no C4 Model pode ser encontrado na pasta [`docs`](docs/c4.drawio.png) do repositório.
+![C4](docs/c4.drawio.png)
 
 ## Requisitos e Casos de Uso
 
@@ -106,9 +109,8 @@ O diagrama do sistema com base no C4 Model pode ser encontrado na pasta [`docs`]
   * RF03 - Postagem de Vídeo: O sistema deve permitir a postagem de vídeos de receitas.
   * RF04 - Feed de Conteúdo: O sistema deve exibir um feed de conteúdo personalizado para cada usuário.
   * RF05 - Interação com Postagens: O sistema deve permitir que os usuários interajam com as postagens, dando like, comentando e compartilhando.
-  * RF06 - Busca de Receitas: O sistema deve permitir a busca de receitas por título, descrição e tags.
-  * RF07 - Edição de Perfil: O sistema deve permitir a edição do perfil do usuário.
-  * RF08 - Seguir Usuários: O sistema deve permitir que os usuários sigam outros usuários.
+  * RF06 - Edição de Perfil: O sistema deve permitir a edição do perfil do usuário.
+  * RF07 - Seguir Usuários: O sistema deve permitir que os usuários sigam outros usuários.
 
   - **Requisitos Não Funcionais:**
 
@@ -121,6 +123,8 @@ O diagrama do sistema com base no C4 Model pode ser encontrado na pasta [`docs`]
   - **Casos de Uso:**
 
   O diagrama de casos de uso pode ser encontrado na pasta [`docs`](docs/use-case.drawio.png) do repositório.
+
+  ![useCase](docs/use-case.drawio.png)
 
 ## Modelagem
 
@@ -138,8 +142,8 @@ Para rodar o aplicativo mobile será necessário ter o Expo Go instalado no seu 
 
 ### Usuários para total acesso a aplicação
 
-   * Email: joao@yopmail.com
-   * Senha: 123Joao
+   * Email: novideo@yopmail.com
+   * Senha: 123Novideo
 
    * Email: bestchef@gmail.com (Tem o maior número de posts)
    * Senha: 123Best

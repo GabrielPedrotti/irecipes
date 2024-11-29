@@ -5,3 +5,4 @@ Flask-PyMongo
 flask_cors
 bcrypt
 google-cloud-storage
+pylint
