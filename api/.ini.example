@@ -1,0 +1,5 @@
+[PROD]
+DB_URI = your key here
+
+[DEV]
+; DB_URI =  your key here

@@ -1,0 +1,8 @@
+Flask==2.2.0
+Werkzeug==2.2.2
+pymongo[srv]
+Flask-PyMongo
+flask_cors
+bcrypt
+google-cloud-storage
+pylint
