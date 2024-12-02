@@ -10,6 +10,7 @@
  * [C4 Model](#c4-model)
  * [Requisitos e Casos de Uso](#requisitos-e-casos-de-uso)
  * [Modelagem](#modelagem)
+ * [Monitoramento de Software](#monitoramento-de-software)
  * [Como rodar o projeto](#como-rodar-o-projeto)
  * [Como contribuir?](#como-contribuir)
 
@@ -129,6 +130,25 @@ O diagrama do sistema com base no C4 Model pode ser encontrado na pasta [`docs`]
 ## Modelagem
 
 O acompanhamento do projeto foi feito utilizando o Trello.
+
+## Monitoramento de Software
+
+O monitoramento do software será feito através de logs e métricas de desempenho, utilizando o Google Cloud para monitoramento de logs na API e a própria ferramenta do Expo para monitoramento no front end.
+
+Contanto o projeto também possui lints para garantir a qualidade do código. Tanto em Python quanto Typescript.
+
+Lint no backend:
+```bash
+$ pylint ./services
+```
+![pylint](docs/pyLint.png)
+
+Lint no frontend:
+```bash
+$ npm run lint
+```
+
+![tsLint](docs/tsLint.png)
 
 ## Como rodar o projeto
 
