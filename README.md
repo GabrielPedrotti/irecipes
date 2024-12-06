@@ -133,7 +133,15 @@ O acompanhamento do projeto foi feito utilizando o Trello.
 
 ## Monitoramento de Software
 
-O monitoramento do software será feito através de logs e métricas de desempenho, utilizando o Google Cloud para monitoramento de logs na API e a própria ferramenta do Expo para monitoramento no front end.
+O monitoramento do software será feito através de logs e métricas de desempenho, utilizando o Google Cloud para monitoramento de logs na API e a própria ferramenta do Expo para monitoramento no front end em conjunto com Sentry (Uma plataforma para gravação de erros e issues que possam acontecer na aplicação)
+
+   - **Sentry Dashboard:**
+   ![sentry](docs/Sentry.png)
+
+   - **Google Cloud Run Dashboard:**
+   ![apiLogs](docs/apiLogs.png)
+
+
 
 Contanto o projeto também possui lints para garantir a qualidade do código. Tanto em Python quanto Typescript.
 
