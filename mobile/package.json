@@ -28,6 +28,7 @@
     "@react-native-community/slider": "4.5.5",
     "@react-navigation/bottom-tabs": "^7.0.2",
     "@react-navigation/native": "^7.0.1",
+    "@sentry/react-native": "^6.4.0",
     "@types/lodash": "^4.17.13",
     "axios": "^1.7.7",
     "date-fns": "^3.6.0",
@@ -60,6 +61,7 @@
     "react-native-svg": "15.8.0",
     "react-native-video": "^6.4.5",
     "react-native-web": "~0.19.13",
+    "sentry-expo": "^7.2.0",
     "tss-react": "^4.9.12",
     "yup": "^1.4.0"
   },

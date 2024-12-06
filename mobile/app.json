@@ -31,7 +31,15 @@
     "plugins": [
       "expo-router",
       "expo-video",
-      "expo-font"
+      "expo-font",
+      [
+        "sentry-expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "irecipes"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

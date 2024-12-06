@@ -71,7 +71,8 @@ export default function UserProfile() {
               time: 15000,
             });
             setThumbnails((prev) => ({ ...prev, [video._id]: uri }));
-          } catch (e: any) {
+          } catch (error) {
+            console.log(error);
             console.warn(`Failed to generate thumbnail for video ${video._id}`);
           }
         }

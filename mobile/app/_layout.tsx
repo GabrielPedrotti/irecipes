@@ -1,6 +1,11 @@
 import { Stack } from "expo-router/stack";
 import { AuthProvider } from "@/context/AuthContext";
 import { NativeBaseProvider } from "native-base";
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "https://97c149138afd51e0bbdf1cd10e811e74@o4508422453657600.ingest.us.sentry.io/4508422455885824",
+});
 
 export default function Layout() {
   return (
