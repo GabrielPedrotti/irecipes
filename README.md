@@ -17,15 +17,15 @@
 
 ## Objetivo
 
-Facilitar a vida das pessoas tendo como principal função ser uma rede social para postagem de receitas em vídeos curtos e dinâmicos, iRecipes, foca em facilitar o dia a dia das pessoas fornecendo conteúdos de receitas que elas gostam conforme o algoritmo dinâmico. Sendo fácil e prático de utilizar utilizando os mesmos padrões de outras redes sociais.
+Facilitar a vida das pessoas tendo como principal função ser uma rede social para postagem de receitas em vídeos curtos e dinâmicos, iRecipes, foca em facilitar o dia a dia das pessoas fornecendo conteúdos de receitas que elas gostam conforme o algoritmo dinâmico. É fácil e prático de utilizar, seguindo os mesmos padrões de outras redes sociais.
 
 ## Escopo
 
-iRecipes tem como objetivo ser uma rede social onde as pessoas compartilham suas receitas postem vídeos as ensinando, dando dicas culinárias. Tem como meta revolucionar o meio de como se aprende a cozinhar e a consumir conteúdos sobre. Assim como, incitando o usuário compartilhar novas descobertas com seus seguidores e amigos.
+O iRecipes tem como objetivo ser uma rede social onde as pessoas compartilham suas receitas, postem vídeos ensinando-as e dando dicas culinárias. Tem como meta revolucionar o modo de aprender a cozinhar e consumir conteúdos relacionados. Além disso, incentiva o usuário a compartilhar novas descobertas com seus seguidores e amigos.
 
  * Produtos do Projeto
     * Plataforma de Rede Social: O aplicativo irá funcionar como uma rede social, permitindo os usuários a criarem perfis, seguir outros usuários, e interagir com postagens das receitas.
-    * Sistema de Postagem de Vídeos Curtos: Terá uma seção para realizar a postagem do vídeo pré-gravado podendo adicionar título, descrição da receita e suas tags para relaciona-lo no algoritmo.
+    * Sistema de Postagem de Vídeos Curtos: Terá uma seção para realizar a postagem do vídeo pré-gravado podendo adicionar título, descrição da receita e suas tags para relacioná-lo ao algoritmo.
     * Feed Personalizado: Terá um feed de conteúdo dinâmico que exibirá vídeos e postagens de receitas de acordo com as preferências e o uso dos usuários, assim sendo sempre sugestões personalizadas.
     * Sistema de Interação e Compartilhamento: Também irá permitir que os usuários compartilhem com amigos e familiares as novas descobertas de receitas, assim como deem like e comentem nas postagens.
 
@@ -33,8 +33,8 @@ iRecipes tem como objetivo ser uma rede social onde as pessoas compartilham suas
     * Cadastro de Usuários: terá um cadastro de usuários, onde será necessário informar nome, e-mail e senha.
     * Preferências do Usuário: irá coletar dados sobre as preferências do usuário, como tipo de receitas preferidas, ingredientes favoritos, entre outros.
     * Interações do Usuário: será coletado dados sobre as interações do usuário, como likes, comentários e compartilhamentos.
-    * Galeria de fotos: O apliativo fará uso da galeria de fotos do dispositivo para que o usuário possa escolher a foto de perfil e postar seus vídeos.
-    * Logs e Erros: Será deixado em código logs de erros para facilitar depuração no futuro.
+    * Galeria de fotos: O aplicativo fará uso da galeria de fotos do dispositivo para que o usuário possa escolher a foto de perfil e postar seus vídeos.
+    * Logs e Erros: Serão deixados em código logs de erros para facilitar depuração no futuro.
  
  * Premissas
     * Conteúdo Breve: Tem foco em vídeos curtos e dinâmicos, com fácil entendimento.
@@ -52,7 +52,7 @@ iRecipes tem como objetivo ser uma rede social onde as pessoas compartilham suas
     * Será utilizado MongoDB para armazenar os dados dos usuários e das receitas.
 
  * Design
-    * Neste projeto se fará uso de sketchs para o design do aplicativo.
+    * Neste projeto, será feito uso de sketches para o design do aplicativo.
 
  * Desenvolvimento
     * Será utilizado React Native em conjunto com Expo Go para o desenvolvimento do aplicativo, utilizando no backend Python com Flask e MongoDB.
@@ -61,7 +61,7 @@ iRecipes tem como objetivo ser uma rede social onde as pessoas compartilham suas
     * A API será hospedada no Google Cloud e o aplicativo será publicado na App Store no TestFlight.
   
  * Observabilidade
-    * Para monitoramento de logs na API, o google cloud fica responsável por isso, para front end a própria ferramenta do expo.
+    * Para monitoramento de logs na API, o Google Cloud será responsável por isso. No front-end, será usada a plataforma Sentry para visualização de erros e logs, assim como a própria ferramenta do Expo.
 
 
 ## Contexto
